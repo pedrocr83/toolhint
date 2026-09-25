@@ -4,7 +4,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 
 ## Phase 0 — foundation, spikes, gate
 - [x] 1. Scaffold + dependencies (laya, mcp, pyyaml, pytest)
-- [ ] 2. Spike: `mcp_tool` UserPromptSubmit hook probe (CLI)
+- [x] 2. Spike: `mcp_tool` UserPromptSubmit hook probe (CLI)
 - [ ] 3. Spike: Laya load/latency/VRAM/head budget
 - [ ] 4. Catalog: skills + slash commands
 - [ ] 5. Catalog: connectors, tools, `discover()` + TTL

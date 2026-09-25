@@ -14,3 +14,8 @@ dist/
 # eval data derived from private transcripts stays local
 eval/data/
 eval/results/
+
+# spike run artifacts
+spike/hook_probe/calls.jsonl
+spike/hook_probe/*.log
+spike/hook_probe/out*.txt
