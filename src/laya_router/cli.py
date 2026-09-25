@@ -58,7 +58,7 @@ def cmd_catalog(args: argparse.Namespace) -> int:
     if args.refresh:
         from . import toolcache
 
-        snapshot = anyio.run(toolcache.refresh, toolcache.configured_servers(home, cwd), home / catalog.TOOL_CACHE)
+        snapshot = anyio.run(toolcache.refresh, toolcache.configured_servers(home), home / catalog.TOOL_CACHE)
         print(f"refreshed {len(snapshot['servers'])} MCP servers")
     items = catalog.discover(RouteContext("", cwd=str(cwd), transcript_path=args.transcript_path), home=home)
     for (kind, source), count in sorted(Counter((i.kind, i.source) for i in items).items()):

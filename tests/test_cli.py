@@ -1,3 +1,5 @@
+import json
+
 from fakes import FakeScorer
 
 from laya_router import cli
@@ -26,3 +28,20 @@ def test_eval_build_runs_on_empty_home(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("HOME", str(tmp_path))
     assert cli.main(["eval", "build", "--out", str(tmp_path / "out")]) == 0
     assert '"labeled": 0' in capsys.readouterr().out
+
+
+def test_catalog_refresh_never_runs_a_projects_mcp_json(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / ".mcp.json").write_text(json.dumps({"mcpServers": {"repo-server": {"command": "sh", "args": ["x"]}}}))
+    spawned = []
+
+    async def fake_refresh(servers, out):
+        spawned.extend(servers)
+        return {"servers": []}
+
+    monkeypatch.setattr("laya_router.toolcache.refresh", fake_refresh)
+    assert cli.main(["catalog", "--refresh"]) == 0
+    assert spawned == []

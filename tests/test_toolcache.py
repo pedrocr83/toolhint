@@ -47,6 +47,6 @@ def test_configured_servers_expands_plugin_root_and_skips_http_and_self(tmp_path
         {"enabledPlugins": {"playwright@official": True, "laya-router@layla": True}}))
     (tmp_path / ".claude" / "plugins" / "installed_plugins.json").write_text(json.dumps({"version": 2, "plugins": {
         "playwright@official": [{"installPath": str(root)}], "laya-router@layla": [{"installPath": str(self_root)}]}}))
-    servers = configured_servers(tmp_path, cwd=None)
+    servers = configured_servers(tmp_path)
     assert [(s["name"], s["plugin"]) for s in servers] == [("context7", None), ("playwright", "playwright")]
     assert servers[1]["args"] == [f"{root}/x"]

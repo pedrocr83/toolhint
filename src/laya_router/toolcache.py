@@ -23,12 +23,11 @@ def server_configs(data: dict) -> dict:
     return wrapped if isinstance(wrapped, dict) else data
 
 
-def configured_servers(home: Path, cwd: Path | None) -> list[dict]:
-    """Stdio servers from ~/.claude.json, <cwd>/.mcp.json and enabled plugins' .mcp.json."""
+def configured_servers(home: Path) -> list[dict]:
+    """Stdio servers from ~/.claude.json and enabled plugins' .mcp.json. A project's .mcp.json is left out:
+    Claude Code runs those only after the user approves them, and a refresh must not bypass that."""
     sources: list[tuple[dict, str | None, Path | None]] = [
         (load_json(home / ".claude.json").get("mcpServers") or {}, None, None)]
-    if cwd:
-        sources.append((server_configs(load_json(cwd / ".mcp.json")), None, None))
     for plugin, root in enabled_plugin_paths(home).items():
         if plugin != SELF_PLUGIN:
             sources.append((server_configs(load_json(root / ".mcp.json")), plugin, root))
