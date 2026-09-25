@@ -10,7 +10,7 @@ from collections.abc import Sequence
 TOKEN = re.compile(r"[a-z0-9]+")
 GRAM = 4
 # English and Portuguese function words plus chat filler: on real prompts they outvote the content words.
-STOPWORDS = frozenset("""
+STOPWORDS = frozenset("""  # noqa: SIM905 - one readable word block beats a 200-item literal
 a about above after again against all also am an and any are as at be because been before being below between both
 but by can cant could did do does doing dont down during each few for from further get go going got had has have
 having he help her here hers herself him himself his how i if im in into is it its itself ive just let lets like make
