@@ -82,6 +82,12 @@ async def test_failed_load_and_route_errors_stay_silent():
     assert failing.route(RouteContext("please debug the failing test")) == ""
 
 
+def test_load_warms_the_model_before_the_first_prompt():
+    scorer = FakeScorer()
+    RouterService(lambda: Engine(scorer), discover=lambda ctx: ITEMS).load()
+    assert len(scorer.choose_calls) == 1
+
+
 def test_decision_log_rotates_and_can_be_disabled(tmp_path):
     path = tmp_path / "d.jsonl"
     log = DecisionLog(path, max_bytes=10)

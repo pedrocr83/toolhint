@@ -21,6 +21,7 @@ INSTRUCTIONS = ("If a user request arrives without a [laya-router] line in conte
                 "with the request text to get ranked skill/connector/tool candidates. Treat them as advisory.")
 ROUTE_DESCRIPTION = ("Rank the skills, connectors and tools most relevant to a user request. "
                      "Returns one advisory line, or an empty string when nothing stands out.")
+WARMUP_PROMPT = "warm up the router model"
 
 
 class RouterService:
@@ -39,8 +40,10 @@ class RouterService:
     def load(self) -> None:
         try:
             self._engine = self._factory()
+            # The first forward pass pays CUDA warm-up (~1.4 s); spend it here, not inside the 5 s hook budget.
+            self._engine.scores(WARMUP_PROMPT, self._discover(RouteContext(WARMUP_PROMPT)))
         except Exception:
-            log.exception("engine load failed; routing stays silent this session")
+            log.exception("engine load or warm-up failed; routing stays silent without an engine")
         finally:
             self.ready.set()
 
