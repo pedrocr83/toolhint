@@ -17,7 +17,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 12. GATE: user go/no-go (hybrid, approach A)
 
 ## Phase 1 — build (only after gate passes)
-- [ ] 13. Decision log + MCP server
+- [x] 13. Decision log + MCP server
 - [ ] 14. CLI
 - [ ] 15. Plugin, marketplace, snippets, README, live verification (CLI, VS Code, Cowork)
 
