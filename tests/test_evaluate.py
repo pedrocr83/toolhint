@@ -1,13 +1,14 @@
 from laya_router.engine import NONE_ID
-from laya_router.evaluate import BM25, calibrate, canonical_ids, evaluate, gate_lines, none_rate, pick_tau
+from laya_router.evaluate import bm25_method, calibrate, canonical_ids, evaluate, gate_lines, none_rate, pick_tau
 from laya_router.items import Item
 
 KNOWN = {"claude-code": {"skill": {"x", "y", "z", "w"}, "connector": set(), "tool": set()}}
 
 
-def test_bm25_prefers_matching_doc():
-    scores = BM25(["send email drafts", "debug failing tests", "make slides"]).scores("my tests are failing")
-    assert scores.index(max(scores)) == 1
+def test_bm25_baseline_indexes_item_names():
+    items = [Item("skill", "pptx", "Work with files", "Use for decks"),
+             Item("skill", "xlsx", "Work with files", "Use for tabular work")]
+    assert bm25_method(items)("export it as xlsx")["skill"][0] == "xlsx"
 
 
 def test_evaluate_counts_top1_top3_and_skips_unknown_gold():
@@ -48,10 +49,12 @@ def test_none_rate_counts_turns_where_every_kind_abstains():
     assert none_rate(rows, {"claude-code": lambda prompt: ranked[prompt]}) == 0.5
 
 
-def test_gate_lines_compare_best_laya_with_bm25():
-    def result(top3: float, p95: float) -> dict:
-        return {"test": {"kinds": {"skill": {"top3": top3}}, "p95_ms": p95}}
+def test_gate_lines_rate_best_laya_on_dev_skills():
+    def result(dev_top3: float, p95: float) -> dict:
+        return {"dev": {"kinds": {"skill": {"top3": dev_top3}}}, "test": {"p95_ms": p95}}
 
-    lines = gate_lines({"bm25": result(0.5, 1.0), "laya-typed-decisions-k10": result(0.75, 120.0)}, "cuda")
-    assert "top-3 skill recall 0.75 >= 0.70: PASS" in lines[3]
-    assert "PASS" in lines[4] and "PASS" in lines[5]
+    lines = gate_lines({"bm25": result(0.5, 1.0), "laya-english-k10": result(0.6, 90.0),
+                        "laya-typed-decisions-k10": result(0.75, 120.0)}, "cuda")
+    assert lines[2] == "Best: laya-typed-decisions-k10"
+    assert "dev top-3 skill recall 0.75 >= 0.70: PASS" in lines[3]
+    assert "+0.25" in lines[4] and lines[4].endswith("PASS") and lines[5].endswith("PASS")

@@ -1,10 +1,6 @@
 """Deterministic stand-in for LayaScorer."""
 from __future__ import annotations
 
-import numpy as np
-
-VOCAB = ("debug", "test", "email", "calendar", "slides", "browser", "deploy", "docs")
-
 
 class FakeScorer:
     model = "fake"
@@ -12,12 +8,7 @@ class FakeScorer:
     def __init__(self, answers: dict[str, dict[str, float]] | None = None, max_options: int | None = None) -> None:
         self.answers = answers or {}
         self.max_options = max_options
-        self.embed_calls: list[list[str]] = []
         self.choose_calls: list[tuple[dict, dict]] = []
-
-    def embed(self, texts):
-        self.embed_calls.append(list(texts))
-        return np.array([[text.lower().count(word) for word in VOCAB] + [0.01] for text in texts], dtype=np.float32)
 
     def choose(self, state, questions):
         self.choose_calls.append((state, questions))

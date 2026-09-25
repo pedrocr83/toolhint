@@ -1,16 +1,16 @@
-"""Rank catalog items for a prompt: embedding shortlist, then one Laya choice per kind."""
+"""Rank catalog items for a prompt: BM25 shortlist, then one Laya choice per kind."""
 from __future__ import annotations
 
-import hashlib
 import logging
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
+from functools import lru_cache
 from typing import Protocol
 
 import numpy as np
 
+from .bm25 import BM25
 from .items import KINDS, Candidate, Item, Ranking
 
 log = logging.getLogger("laya_router.engine")
@@ -31,8 +31,6 @@ Scores = dict[str, list[tuple[str, float]]]
 
 class Scorer(Protocol):
     model: str
-
-    def embed(self, texts: Sequence[str]) -> np.ndarray: ...
 
     def choose(self, state: dict, questions: dict) -> dict: ...
 
@@ -56,55 +54,6 @@ class EngineConfig:
         return cls(k=k, tau=tau)
 
 
-def digest(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-class EmbeddingCache:
-    """sha256(text) -> vector, persisted to an .npz so sessions share the work."""
-
-    def __init__(self, path: Path | None = None) -> None:
-        self.path = path
-        self._vecs: dict[str, np.ndarray] = self._load(path)
-
-    @staticmethod
-    def _load(path: Path | None) -> dict[str, np.ndarray]:
-        if not path or not path.exists():
-            return {}
-        try:
-            with np.load(path) as data:
-                return {key: data[key] for key in data.files}
-        except Exception:  # corrupt or partial file: rebuild rather than fail
-            log.warning("ignoring unreadable embedding cache %s", path)
-            return {}
-
-    def vectors(self, items: Sequence[Item], embed: Callable[[Sequence[str]], np.ndarray]) -> np.ndarray:
-        keys = [digest(item.text) for item in items]
-        missing = {key: item.text for key, item in zip(keys, items) if key not in self._vecs}
-        if missing:
-            fresh = np.asarray(embed(list(missing.values())), dtype=np.float32)
-            self._vecs.update(zip(missing.keys(), fresh))
-            self._save()
-        try:
-            return np.stack([self._vecs[key] for key in keys])
-        except ValueError:  # mixed dimensions: stale vectors from another encoder
-            self._vecs = {}
-            return self.vectors(items, embed)
-
-    def _save(self) -> None:
-        if not self.path:
-            return
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.path.with_name(self.path.name + ".tmp.npz")
-        np.savez(tmp, **self._vecs)
-        tmp.replace(self.path)
-
-
-def cosine(query: np.ndarray, matrix: np.ndarray) -> np.ndarray:
-    norms = np.linalg.norm(matrix, axis=1) * np.linalg.norm(query)
-    return (matrix @ query) / np.where(norms == 0, 1.0, norms)
-
-
 def should_skip(prompt: str, previous: str, min_chars: int) -> bool:
     text = prompt.strip()
     return len(text) < min_chars or text.startswith("/") or text == previous.strip()
@@ -113,6 +62,17 @@ def should_skip(prompt: str, previous: str, min_chars: int) -> bool:
 def short_key(item: Item) -> str:
     """Compact option key (Laya renders 'key: label' in a small head budget)."""
     return item.id.rsplit("__", 1)[-1].rsplit(":", 1)[-1] or item.id
+
+
+def doc_text(item: Item) -> str:
+    """What BM25 indexes for an item: short name, connector and description."""
+    return f"{short_key(item)} {item.connector or ''} {item.text}"
+
+
+@lru_cache(maxsize=16)
+def lexical_index(pool: tuple[Item, ...]) -> BM25:
+    """One BM25 index per distinct pool; items are frozen, so an edited description keys a new index."""
+    return BM25([doc_text(item) for item in pool])
 
 
 def option_keys(pool: Sequence[Item]) -> dict[str, Item]:
@@ -142,12 +102,11 @@ def translate(answer: Mapping, keyed: Mapping[str, Item]) -> list[tuple[str, flo
 
 
 class Engine:
-    """Stateless apart from the embedding cache and the last prompt (for repeat-skipping)."""
+    """Stateless apart from the last prompt (for repeat-skipping)."""
 
-    def __init__(self, scorer: Scorer, cfg: EngineConfig | None = None, cache: EmbeddingCache | None = None) -> None:
+    def __init__(self, scorer: Scorer, cfg: EngineConfig | None = None) -> None:
         self.scorer = scorer
         self.cfg = cfg or EngineConfig()
-        self.cache = cache or EmbeddingCache()
         self.overflows = 0
         self._previous = ""
 
@@ -171,16 +130,15 @@ class Engine:
         pools = {kind: pool for kind, pool in pools.items() if pool}
         if not pools:
             return {}
-        query = np.asarray(self.scorer.embed([text]), dtype=np.float32)[0]
-        keyed = {kind: option_keys(self._shortlist(query, pool, self.cfg.k[kind])) for kind, pool in pools.items()}
+        keyed = {kind: option_keys(self._shortlist(text, pool, self.cfg.k[kind])) for kind, pool in pools.items()}
         answers, keyed = self._choose(text, keyed)
         return {kind: translate(answers[kind], keyed[kind]) for kind in keyed if kind in answers}
 
-    def _shortlist(self, query: np.ndarray, pool: list[Item], k: int) -> list[Item]:
+    def _shortlist(self, text: str, pool: list[Item], k: int) -> list[Item]:
         if len(pool) <= k:
             return pool
-        sims = cosine(query, self.cache.vectors(pool, self.scorer.embed))
-        return [pool[int(i)] for i in np.argsort(-sims, kind="stable")[:k]]
+        scores = np.asarray(lexical_index(tuple(pool)).scores(text))
+        return [pool[int(i)] for i in np.argsort(-scores, kind="stable")[:k]]
 
     def _choose(self, text: str, keyed: dict[str, dict[str, Item]]) -> tuple[dict, dict[str, dict[str, Item]]]:
         """One predict call; halve option lists while they overflow Laya's head budget."""

@@ -1,9 +1,6 @@
-import numpy as np
 from fakes import FakeScorer
 
-from laya_router.engine import (
-    NONE_ID, EmbeddingCache, Engine, EngineConfig, digest, option_keys, should_skip,
-)
+from laya_router.engine import NONE_ID, Engine, EngineConfig, option_keys, should_skip
 from laya_router.items import Item
 
 K2 = EngineConfig(k={"skill": 2, "connector": 15, "tool": 10})
@@ -30,13 +27,48 @@ def test_skip_rules():
 def test_rank_skips_without_calling_scorer():
     scorer = FakeScorer()
     assert Engine(scorer).rank("/compact now please", SKILLS).is_empty()
-    assert not scorer.embed_calls and not scorer.choose_calls
+    assert not scorer.choose_calls
 
 
-def test_shortlist_keeps_top_k_by_cosine():
+def test_shortlist_keeps_top_k_lexical_matches():
     scorer = FakeScorer()
     Engine(scorer, K2).scores("debug this failing test", SKILLS)
     assert set(scorer.choose_calls[0][1]["skill"]["criteria"]) == {"debugging", "tester", NONE_ID}
+
+
+def test_shortlist_ranks_by_bm25_over_name_and_description():
+    pool = [skill("slides", "make slides decks"), skill("notes", "take meeting notes"),
+            skill("anthropic-skills:xlsx", "work with tabular files"), skill("reports", "build quarterly workbook reports")]
+    scorer = FakeScorer()
+    Engine(scorer, K2).scores("turn this csv into an xlsx workbook", pool)
+    assert set(scorer.choose_calls[0][1]["skill"]["criteria"]) == {"xlsx", "reports", NONE_ID}
+
+
+def test_tool_shortlist_matches_connector_name():
+    tools = [Item("tool", f"mcp__srv{i}__op{i}", "run operation", "run operation", f"srv{i}") for i in range(3)]
+    tools.append(Item("tool", "mcp__claude_ai_Gmail__search_threads", "Search threads", "Search threads by query", "Gmail"))
+    scorer = FakeScorer()
+    Engine(scorer, EngineConfig(k={"skill": 10, "connector": 15, "tool": 1})).scores("anything new in my gmail inbox", tools)
+    assert set(scorer.choose_calls[0][1]["tool"]["criteria"]) == {"search_threads", NONE_ID}
+
+
+class ChooseOnly:
+    model = "choose-only"
+
+    def choose(self, state, questions):
+        return {qid: {"probabilities": {NONE_ID: 1.0}} for qid in questions}
+
+
+def test_scorer_needs_only_choose():
+    assert Engine(ChooseOnly(), K2).scores(PROMPT, SKILLS)["skill"] == [(NONE_ID, 1.0)]
+
+
+def test_edited_item_text_refreshes_shortlist():
+    scorer = FakeScorer()
+    engine = Engine(scorer, K2)
+    engine.scores("rotate the api keys", SKILLS)
+    engine.scores("rotate the api keys", SKILLS[:-1] + [skill("tester", "rotate api keys and secrets")])
+    assert "tester" in scorer.choose_calls[1][1]["skill"]["criteria"]
 
 
 def test_none_winning_empties_kind():
@@ -72,7 +104,7 @@ def test_empty_kind_pool_omits_question():
 def test_no_items_returns_empty_without_model_calls():
     scorer = FakeScorer()
     assert Engine(scorer).scores(PROMPT, []) == {}
-    assert not scorer.embed_calls
+    assert not scorer.choose_calls
 
 
 def test_giant_prompt_is_truncated():
@@ -93,30 +125,6 @@ def test_head_budget_overflow_halves_shortlists():
     scores = engine.scores(PROMPT, SKILLS)
     assert len(scorer.choose_calls) == 2 and engine.overflows == 1
     assert len(scorer.choose_calls[1][1]["skill"]["criteria"]) == 5
-    assert scores["skill"]
-
-
-def test_embedding_cache_persists_and_skips_known_texts(tmp_path):
-    path = tmp_path / "emb.npz"
-    Engine(FakeScorer(), K2, EmbeddingCache(path)).scores(PROMPT, SKILLS)
-    second = FakeScorer()
-    Engine(second, K2, EmbeddingCache(path)).scores(PROMPT, SKILLS)
-    assert path.exists()
-    assert second.embed_calls == [[PROMPT]]
-
-
-def test_corrupt_cache_file_is_ignored(tmp_path):
-    path = tmp_path / "emb.npz"
-    path.write_bytes(b"not a zip")
-    scorer = FakeScorer()
-    Engine(scorer, K2, EmbeddingCache(path)).scores(PROMPT, SKILLS)
-    assert len(scorer.embed_calls) == 2
-
-
-def test_mixed_dimension_cache_rebuilds(tmp_path):
-    cache = EmbeddingCache(tmp_path / "emb.npz")
-    cache._vecs[digest(SKILLS[0].text)] = np.zeros(3, dtype=np.float32)
-    scores = Engine(FakeScorer(), K2, cache).scores(PROMPT, SKILLS)
     assert scores["skill"]
 
 

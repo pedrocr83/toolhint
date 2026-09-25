@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
-import re
 import statistics
 import time
 from collections import Counter
@@ -14,14 +12,13 @@ from pathlib import Path
 
 import numpy as np
 
+from .bm25 import BM25
 from .catalog import harness_catalogs
 from .dataset import read_jsonl
-from .engine import NONE_ID, EmbeddingCache, Engine, EngineConfig, cosine, short_key
+from .engine import NONE_ID, Engine, EngineConfig, doc_text, short_key
 from .items import KINDS, Item
 
-TOKEN = re.compile(r"[a-z0-9]+")
 TAUS = (0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7)
-CACHE_DIR = Path.home() / ".cache" / "laya-router"
 RankFn = Callable[[str], dict[str, list[str]]]
 Scored = dict[str, dict[str, list[tuple[str, float]]]]
 Canon = Mapping[str, Mapping[str, str]]
@@ -35,33 +32,6 @@ class Inputs:
     test: list[dict]
     dev: list[dict]
     negatives: list[dict]
-
-
-def tokens(text: str) -> list[str]:
-    return TOKEN.findall(text.lower())
-
-
-class BM25:
-    """Plain Okapi BM25 over item texts: the no-model baseline."""
-
-    def __init__(self, docs: Sequence[str], k1: float = 1.5, b: float = 0.75) -> None:
-        self.docs = [Counter(tokens(doc)) for doc in docs]
-        self.lengths = [sum(doc.values()) for doc in self.docs]
-        self.avg = sum(self.lengths) / len(self.lengths) if self.lengths else 1.0
-        df = Counter(term for doc in self.docs for term in doc)
-        self.idf = {term: math.log(1 + (len(self.docs) - f + 0.5) / (f + 0.5)) for term, f in df.items()}
-        self.k1, self.b = k1, b
-
-    def scores(self, query: str) -> list[float]:
-        terms = tokens(query)
-        return [sum(self._term(doc, length, term) for term in terms) for doc, length in zip(self.docs, self.lengths)]
-
-    def _term(self, doc: Counter, length: int, term: str) -> float:
-        freq = doc.get(term, 0)
-        if not freq:
-            return 0.0
-        norm = freq + self.k1 * (1 - self.b + self.b * length / (self.avg or 1.0))
-        return self.idf[term] * freq * (self.k1 + 1) / norm
 
 
 def canonical_ids(items: Sequence[Item]) -> dict[str, str]:
@@ -81,19 +51,8 @@ def order(pool: list[Item], scores: Sequence[float]) -> list[str]:
 
 def bm25_method(items: Sequence[Item]) -> RankFn:
     grouped = pools(items)
-    indexes = {kind: BM25([item.text for item in pool]) for kind, pool in grouped.items()}
+    indexes = {kind: BM25([doc_text(item) for item in pool]) for kind, pool in grouped.items()}
     return lambda prompt: {kind: order(grouped[kind], index.scores(prompt)) for kind, index in indexes.items()}
-
-
-def cosine_method(engine: Engine, items: Sequence[Item]) -> RankFn:
-    grouped = pools(items)
-    matrices = {kind: engine.cache.vectors(pool, engine.scorer.embed) for kind, pool in grouped.items()}
-
-    def rank(prompt: str) -> dict[str, list[str]]:
-        query = np.asarray(engine.scorer.embed([prompt]), dtype=np.float32)[0]
-        return {kind: order(grouped[kind], cosine(query, matrix)) for kind, matrix in matrices.items()}
-
-    return rank
 
 
 def laya_method(engine: Engine, items: Sequence[Item], store: Scored) -> RankFn:
@@ -199,17 +158,14 @@ def vram_mb() -> int:
 
 
 def run_model(model: str, device: str, ks: Sequence[int], data: Inputs) -> dict:
-    """cosine-only plus shortlist→choice at each K, for one checkpoint."""
+    """BM25 shortlist→choice at each K, for one checkpoint."""
     from .scorer import LayaScorer
 
     scorer = LayaScorer(model=model, device=None if device == "auto" else device)
-    cache = EmbeddingCache(CACHE_DIR / f"emb-{model}.npz")
-    base = Engine(scorer, EngineConfig(), cache)
-    cosine_rankers = {h: cosine_method(base, i) for h, i in data.catalogs.items()}
-    out = {f"cosine-{model}": {"test": evaluate(data.test, data.known, cosine_rankers, data.canon)}}
+    out: dict = {}
     pt_rows = [row for row in data.dev if row.get("source") == "synthetic-pt"]
     for k in ks:
-        engine = Engine(scorer, EngineConfig(k={"skill": k, "connector": 15, "tool": k}), cache)
+        engine = Engine(scorer, EngineConfig(k={"skill": k, "connector": 15, "tool": k}))
         store: Scored = {}
         rankers = {h: laya_method(engine, i, store) for h, i in data.catalogs.items()}
         out[f"laya-{model}-k{k}"] = {
@@ -239,16 +195,18 @@ def extra_lines(sets: dict) -> list[str]:
 
 
 def gate_lines(results: dict, device: str) -> list[str]:
+    """Skill criteria on the dev set: most real skill labels are workflow continuations (spec §12)."""
     laya = {name: r for name, r in results.items() if name.startswith("laya-")}
     if not laya:
         return ["## Gate", "", "No Laya results."]
-    bm25 = results["bm25"]["test"]["kinds"]["skill"]["top3"]
-    name, best = max(laya.items(), key=lambda kv: kv[1]["test"]["kinds"]["skill"]["top3"])
-    top3, p95 = best["test"]["kinds"]["skill"]["top3"], best["test"]["p95_ms"]
+    bm25 = results["bm25"]["dev"]["kinds"]["skill"]["top3"]
+    name, best = max(laya.items(), key=lambda kv: kv[1]["dev"]["kinds"]["skill"]["top3"])
+    top3, p95 = best["dev"]["kinds"]["skill"]["top3"], best["test"]["p95_ms"]
     latency = "n/a on CPU" if device == "cpu" else ("PASS" if p95 <= 250 else "FAIL")
     return ["## Gate", "", f"Best: {name}",
-            f"- top-3 skill recall {top3} >= 0.70: {'PASS' if top3 >= 0.70 else 'FAIL'}",
-            f"- beats BM25 ({bm25}) by >= 0.10: {'PASS' if top3 - bm25 >= 0.10 else 'FAIL'}",
+            f"- dev top-3 skill recall {top3} >= 0.70: {'PASS' if top3 >= 0.70 else 'FAIL'}",
+            (f"- beats BM25 ({bm25}) on dev skill top-3 by >= 0.10 ({top3 - bm25:+.2f}): "
+             f"{'PASS' if top3 - bm25 >= 0.10 else 'FAIL'}"),
             f"- p95 {p95} ms <= 250 on GPU: {latency}",
             "- hook injects context in Claude Code CLI: see spike/FINDINGS.md"]
 
