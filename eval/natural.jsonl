@@ -1,0 +1,96 @@
+{"prompt": "my pytest suite fails with a KeyError after the refactor, help me find why", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "natural"}
+{"prompt": "the api returns 500 only in staging and I can't figure out what's different", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "natural"}
+{"prompt": "I want to add a dark mode toggle to the settings page, how should we approach it?", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "natural"}
+{"prompt": "let's build a small CLI that syncs my notes folder to S3", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "natural"}
+{"prompt": "ok the design looks right, now break it down into concrete implementation steps", "harness": "claude-code", "gold": {"skill": "superpowers:writing-plans"}, "source": "natural"}
+{"prompt": "go ahead and implement plan.md task by task", "harness": "claude-code", "gold": {"skill": "superpowers:executing-plans"}, "source": "natural"}
+{"prompt": "add a function that validates Portuguese NIF numbers", "harness": "claude-code", "gold": {"skill": "superpowers:test-driven-development"}, "source": "natural"}
+{"prompt": "are you sure it's done? double check everything actually works before we close this", "harness": "claude-code", "gold": {"skill": "superpowers:verification-before-completion"}, "source": "natural"}
+{"prompt": "before I merge this branch can you get someone to look over the changes", "harness": "claude-code", "gold": {"skill": "superpowers:requesting-code-review"}, "source": "natural"}
+{"prompt": "the reviewer left 12 comments on my PR and some seem wrong, help me work through them", "harness": "claude-code", "gold": {"skill": "superpowers:receiving-code-review"}, "source": "natural"}
+{"prompt": "I need an isolated copy of the repo to try this big refactor without touching main", "harness": "claude-code", "gold": {"skill": "superpowers:using-git-worktrees"}, "source": "natural"}
+{"prompt": "all tests are green, what's the cleanest way to wrap up this branch and get it merged", "harness": "claude-code", "gold": {"skill": "superpowers:finishing-a-development-branch"}, "source": "natural"}
+{"prompt": "there are four unrelated flaky tests, can we tackle them at the same time", "harness": "claude-code", "gold": {"skill": "superpowers:dispatching-parallel-agents"}, "source": "natural"}
+{"prompt": "use separate agents to implement each task of the plan and review each one", "harness": "claude-code", "gold": {"skill": "superpowers:subagent-driven-development"}, "source": "natural"}
+{"prompt": "what did we actually modify today? give me a before and after rundown", "harness": "claude-code", "gold": {"skill": "change-report"}, "source": "natural"}
+{"prompt": "skim the whole services folder and tell me which modules call the payments API", "harness": "claude-code", "gold": {"skill": "delegate-readonly"}, "source": "natural"}
+{"prompt": "document the invariants and gotchas of the billing module so the next person doesn't have to rediscover them", "harness": "claude-code", "gold": {"skill": "codebase-map"}, "source": "natural"}
+{"prompt": "build me a graph of how these papers and notes connect to each other", "harness": "claude-code", "gold": {"skill": "graphify"}, "source": "natural"}
+{"prompt": "start a new django api project with auth and sane security defaults", "harness": "claude-code", "gold": {"skill": "scaffold-backend"}, "source": "natural"}
+{"prompt": "set up a new react app with typescript strict mode and a clean folder structure", "harness": "claude-code", "gold": {"skill": "scaffold-frontend"}, "source": "natural"}
+{"prompt": "I need dockerfiles, nginx and a github actions pipeline for this repo", "harness": "claude-code", "gold": {"skill": "scaffold-infra"}, "source": "natural"}
+{"prompt": "go through the django side and flag n+1 queries and anything insecure", "harness": "claude-code", "gold": {"skill": "review-backend"}, "source": "natural"}
+{"prompt": "look through the react code for performance problems and unsafe patterns", "harness": "claude-code", "gold": {"skill": "review-frontend"}, "source": "natural"}
+{"prompt": "check our docker and CI setup for security issues", "harness": "claude-code", "gold": {"skill": "review-infra"}, "source": "natural"}
+{"prompt": "extract the colors, fonts and spacing we use into a design system document", "harness": "claude-code", "gold": {"skill": "review-design"}, "source": "natural"}
+{"prompt": "spin up the first version of the rag demo with docker, embeddings and a vector store", "harness": "claude-code", "gold": {"skill": "rag-tier1-scaffold"}, "source": "natural"}
+{"prompt": "add keyword search next to the vectors in the rag project and fuse the rankings", "harness": "claude-code", "gold": {"skill": "rag-tier2-scaffold"}, "source": "natural"}
+{"prompt": "I'm stopping for today, write down where we are so tomorrow's session can pick it up", "harness": "claude-code", "gold": {"skill": "handoff"}, "source": "natural"}
+{"prompt": "didn't we solve this exact CORS error in an earlier session? find what we did", "harness": "claude-code", "gold": {"skill": "history"}, "source": "natural"}
+{"prompt": "where are we on this project? give me a quick orientation", "harness": "claude-code", "gold": {"skill": "project-context"}, "source": "natural"}
+{"prompt": "is there a skill I can install for working with terraform?", "harness": "claude-code", "gold": {"skill": "find-skills"}, "source": "natural"}
+{"prompt": "how do I add a new MCP tool to the playwright codebase?", "harness": "claude-code", "gold": {"skill": "playwright-dev"}, "source": "natural"}
+{"prompt": "pull the tables out of this invoice.pdf into something I can edit", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pdf"}, "source": "natural"}
+{"prompt": "write a two-page memo as a word document", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docx"}, "source": "natural"}
+{"prompt": "turn this csv of expenses into a workbook with monthly totals and a chart", "harness": "claude-code", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "natural"}
+{"prompt": "make a 6-slide deck for the investor update", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pptx"}, "source": "natural"}
+{"prompt": "the landing page looks generic, make it feel more premium and distinctive", "harness": "claude-code", "gold": {"skill": "frontend-design:frontend-design"}, "source": "natural"}
+{"prompt": "I want to expose our internal inventory API to claude through an MCP server", "harness": "claude-code", "gold": {"skill": "document-skills:mcp-builder"}, "source": "natural"}
+{"prompt": "click through the signup flow on localhost:3000 and tell me what breaks", "harness": "claude-code", "gold": {"skill": "document-skills:webapp-testing", "connector": "playwright"}, "source": "natural"}
+{"prompt": "draft this week's status update for the team newsletter", "harness": "claude-code", "gold": {"skill": "document-skills:internal-comms"}, "source": "natural"}
+{"prompt": "help me write a design doc together, section by section", "harness": "claude-code", "gold": {"skill": "document-skills:doc-coauthoring"}, "source": "natural"}
+{"prompt": "restyle this report with Anthropic's colors and fonts", "harness": "claude-code", "gold": {"skill": "document-skills:brand-guidelines"}, "source": "natural"}
+{"prompt": "make a generative art piece with flowing particles that I can tweak with a seed", "harness": "claude-code", "gold": {"skill": "document-skills:algorithmic-art"}, "source": "natural"}
+{"prompt": "design a poster for our meetup as a png", "harness": "claude-code", "gold": {"skill": "anthropic-skills:canvas-design"}, "source": "natural"}
+{"prompt": "make a small animated gif of a dancing cat for our slack channel", "harness": "claude-code", "gold": {"skill": "document-skills:slack-gif-creator"}, "source": "natural"}
+{"prompt": "apply one consistent color theme to these slides and the html report", "harness": "claude-code", "gold": {"skill": "document-skills:theme-factory"}, "source": "natural"}
+{"prompt": "build an interactive dashboard with tabs and charts as a single html artifact", "harness": "claude-code", "gold": {"skill": "document-skills:web-artifacts-builder"}, "source": "natural"}
+{"prompt": "which claude model id should I use for cheap batch summarization and how much does it cost?", "harness": "claude-code", "gold": {"skill": "document-skills:claude-api"}, "source": "natural"}
+{"prompt": "check if our checkout page works with a screen reader and keyboard only", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:a11y-debugging"}, "source": "natural"}
+{"prompt": "the homepage takes 4 seconds before the main image shows, speed that up", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:debug-optimize-lcp"}, "source": "natural"}
+{"prompt": "from now on answer me in as few words as possible", "harness": "claude-code", "gold": {"skill": "caveman:caveman"}, "source": "natural"}
+{"prompt": "write a super terse commit message for these changes", "harness": "claude-code", "gold": {"skill": "caveman:caveman-commit"}, "source": "natural"}
+{"prompt": "shrink my CLAUDE.md so it uses fewer tokens without losing any rules", "harness": "claude-code", "gold": {"skill": "caveman:compress"}, "source": "natural"}
+{"prompt": "keep iterating on this task in a loop until the tests pass on their own", "harness": "claude-code", "gold": {"skill": "ralph-loop:ralph-loop"}, "source": "natural"}
+{"prompt": "what hooks or subagents would be worth setting up for this repo?", "harness": "claude-code", "gold": {"skill": "claude-code-setup:claude-automation-recommender"}, "source": "natural"}
+{"prompt": "make a shared doc where the team can comment on the Q4 roadmap", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docs"}, "source": "natural"}
+{"prompt": "give me my morning brief", "harness": "claude-code", "gold": {"skill": "anthropic-skills:morning"}, "source": "natural"}
+{"prompt": "I exported my memories from ChatGPT, bring them in here", "harness": "claude-code", "gold": {"skill": "anthropic-skills:import-memory"}, "source": "natural"}
+{"prompt": "what's the current way to define loaders in react router v7? check the latest docs", "harness": "claude-code", "gold": {"connector": "context7"}, "source": "natural"}
+{"prompt": "open a pull request for this branch against main", "harness": "claude-code", "gold": {"connector": "github"}, "source": "natural"}
+{"prompt": "find open issues in our repo labeled bug", "harness": "claude-code", "gold": {"connector": "github"}, "source": "natural"}
+{"prompt": "how did I sleep last night and what's my recovery score?", "harness": "claude-code", "gold": {"connector": "whoop"}, "source": "natural"}
+{"prompt": "what would break if I change the signature of process_payment?", "harness": "claude-code", "gold": {"connector": "code-review-graph"}, "source": "natural"}
+{"prompt": "open the site in chrome and record a performance trace", "harness": "claude-code", "gold": {"connector": "chrome-devtools"}, "source": "natural"}
+{"prompt": "take a screenshot of the pricing page at mobile width", "harness": "claude-code", "gold": {"connector": "playwright"}, "source": "natural"}
+{"prompt": "find every place that references the UserSession class and rename it", "harness": "claude-code", "gold": {"connector": "serena"}, "source": "natural"}
+{"prompt": "pull the spacing and colors from our figma file for the new button", "harness": "claude-code", "gold": {"connector": "Figma"}, "source": "natural"}
+{"prompt": "did Ana reply to my message about the contract?", "harness": "claude-code", "gold": {"connector": "Gmail"}, "source": "natural"}
+{"prompt": "draft a polite follow-up to the supplier who hasn't paid", "harness": "claude-code", "gold": {"connector": "Gmail"}, "source": "natural"}
+{"prompt": "what's on my schedule tomorrow afternoon?", "harness": "claude-code", "gold": {"connector": "Google Calendar"}, "source": "natural"}
+{"prompt": "find a 30 minute slot with João next week", "harness": "claude-code", "gold": {"connector": "Google Calendar"}, "source": "natural"}
+{"prompt": "find the Q3 budget sheet in my drive", "harness": "claude-code", "gold": {"connector": "Google Drive"}, "source": "natural"}
+{"prompt": "post the release notes in the #eng channel", "harness": "claude-code", "gold": {"connector": "Slack"}, "source": "natural"}
+{"prompt": "show me this data as an interactive chart right here in the chat", "harness": "claude-code", "gold": {"connector": "visualize"}, "source": "natural"}
+{"prompt": "anything urgent in my inbox today?", "harness": "cowork", "gold": {"connector": "Gmail"}, "source": "natural"}
+{"prompt": "grab the latest version of the board deck from drive", "harness": "cowork", "gold": {"connector": "Google Drive"}, "source": "natural"}
+{"prompt": "move my 3pm meeting to Thursday", "harness": "cowork", "gold": {"connector": "Google Calendar"}, "source": "natural"}
+{"prompt": "tell the design channel the new mockups are ready", "harness": "cowork", "gold": {"connector": "Slack"}, "source": "natural"}
+{"prompt": "every monday at 9 send me a summary of last week's emails", "harness": "cowork", "gold": {"skill": "anthropic-skills:schedule", "connector": "Gmail"}, "source": "natural"}
+{"prompt": "clean up this spreadsheet and add a pivot of sales by region", "harness": "cowork", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "natural"}
+{"prompt": "turn these notes into a short presentation", "harness": "cowork", "gold": {"skill": "anthropic-skills:pptx"}, "source": "natural"}
+{"prompt": "why did this chat burn so many tokens?", "harness": "cowork", "gold": {"skill": "anthropic-skills:explain-usage"}, "source": "natural"}
+{"prompt": "tidy up what you remember about me, there are duplicates", "harness": "cowork", "gold": {"skill": "anthropic-skills:consolidate-memory"}, "source": "natural"}
+{"prompt": "help me get started here, what should I connect first?", "harness": "cowork", "gold": {"skill": "anthropic-skills:setup-cowork"}, "source": "natural"}
+{"prompt": "turn this into a formal letter I can print", "harness": "cowork", "gold": {"skill": "anthropic-skills:docx"}, "source": "natural"}
+{"prompt": "merge these three pdfs into one and add page numbers", "harness": "cowork", "gold": {"skill": "anthropic-skills:pdf"}, "source": "natural"}
+{"prompt": "os testes começaram a falhar depois do merge e não percebo porquê", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "natural-pt"}
+{"prompt": "quero criar uma app para gerir as reservas do restaurante, como começamos?", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "natural-pt"}
+{"prompt": "faz-me uma folha de cálculo com as despesas do mês e totais por categoria", "harness": "claude-code", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "natural-pt"}
+{"prompt": "prepara uma apresentação de 5 diapositivos sobre os resultados do trimestre", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pptx"}, "source": "natural-pt"}
+{"prompt": "o desenho está aprovado, divide isto em passos de implementação", "harness": "claude-code", "gold": {"skill": "superpowers:writing-plans"}, "source": "natural-pt"}
+{"prompt": "a página inicial está muito genérica, dá-lhe um aspeto mais cuidado", "harness": "claude-code", "gold": {"skill": "frontend-design:frontend-design"}, "source": "natural-pt"}
+{"prompt": "a Ana já respondeu ao meu email sobre o contrato?", "harness": "cowork", "gold": {"connector": "Gmail"}, "source": "natural-pt"}
+{"prompt": "o que tenho na agenda amanhã de manhã?", "harness": "cowork", "gold": {"connector": "Google Calendar"}, "source": "natural-pt"}
+{"prompt": "junta estes pdfs num só documento", "harness": "cowork", "gold": {"skill": "anthropic-skills:pdf"}, "source": "natural-pt"}
+{"prompt": "procura o orçamento de 2025 no meu drive", "harness": "cowork", "gold": {"connector": "Google Drive"}, "source": "natural-pt"}
