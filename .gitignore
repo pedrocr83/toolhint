@@ -19,3 +19,4 @@ eval/results/
 spike/hook_probe/calls.jsonl
 spike/hook_probe/*.log
 spike/hook_probe/out*.txt
+spike/hook_probe/latest
