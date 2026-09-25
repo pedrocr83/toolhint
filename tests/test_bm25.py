@@ -6,6 +6,10 @@ def test_tokens_fold_accents_drop_stopwords_and_split_long_words():
                                                  "test", "ests", "v2"]
 
 
+def test_content_words_survive_the_stopword_filter():
+    assert tokens("write a word document") == ["writ", "rite", "word", "docu", "ocum", "cume", "umen", "ment"]
+
+
 def test_bm25_matches_across_word_forms():
     scores = BM25(["test failure diagnosis", "slide decks"]).scores("my pytest run keeps failing")
     assert scores[0] > 0 and scores[1] == 0
