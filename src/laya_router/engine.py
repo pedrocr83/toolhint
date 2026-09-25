@@ -23,8 +23,8 @@ QUESTIONS = {
     "tool": "Which tool should be called first for this request?",
 }
 PLURAL = {"skill": "skills", "connector": "connectors", "tool": "tools"}
-DEFAULT_K = {"skill": 10, "connector": 15, "tool": 10}
-DEFAULT_TAU = {"skill": 0.35, "connector": 0.35, "tool": 0.35}
+DEFAULT_K = {"skill": 5, "connector": 15, "tool": 5}  # phase 0 re-run: best dev skill top-1/top-3, ≤10 options stay calibrated
+DEFAULT_TAU = {"skill": 0.2, "connector": 0.2, "tool": 0.5}  # smallest τ with dev precision ≥ 0.75 at K=5
 DEFAULT_CAP = {"skill": 3, "connector": 2, "tool": 3}
 Scores = dict[str, list[tuple[str, float]]]
 

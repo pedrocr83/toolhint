@@ -121,7 +121,7 @@ def test_unicode_prompt_passes_through():
 
 def test_head_budget_overflow_halves_shortlists():
     scorer = FakeScorer(max_options=5)
-    engine = Engine(scorer)
+    engine = Engine(scorer, EngineConfig(k={"skill": 10, "connector": 15, "tool": 10}))
     scores = engine.scores(PROMPT, SKILLS)
     assert len(scorer.choose_calls) == 2 and engine.overflows == 1
     assert len(scorer.choose_calls[1][1]["skill"]["criteria"]) == 5
@@ -129,6 +129,7 @@ def test_head_budget_overflow_halves_shortlists():
 
 
 def test_config_from_env():
-    cfg = EngineConfig.from_env({"LAYA_ROUTER_K_SKILL": "5", "LAYA_ROUTER_TAU": "0.5"})
-    assert cfg.k == {"skill": 5, "connector": 15, "tool": 10}
+    cfg = EngineConfig.from_env({"LAYA_ROUTER_K_SKILL": "7", "LAYA_ROUTER_TAU": "0.5"})
+    assert cfg.k == {"skill": 7, "connector": 15, "tool": 5}
     assert cfg.tau == {"skill": 0.5, "connector": 0.5, "tool": 0.5}
+    assert EngineConfig().tau == {"skill": 0.2, "connector": 0.2, "tool": 0.5}
