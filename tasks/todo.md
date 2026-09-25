@@ -6,7 +6,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 1. Scaffold + dependencies (laya, mcp, pyyaml, pytest)
 - [x] 2. Spike: `mcp_tool` UserPromptSubmit hook probe (CLI)
 - [x] 3. Spike: Laya load/latency/VRAM/head budget
-- [ ] 4. Catalog: skills + slash commands
+- [x] 4. Catalog: skills + slash commands
 - [ ] 5. Catalog: connectors, tools, `discover()` + TTL
 - [ ] 6. Tool cache refresh (local stdio MCP servers)
 - [ ] 7. Engine: shortlist, choice + none, thresholds, caches
