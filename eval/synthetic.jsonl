@@ -1,0 +1,224 @@
+{"prompt": "summarize what you changed in this session as a before/after report for the PR", "harness": "claude-code", "gold": {"skill": "change-report"}, "source": "synthetic"}
+{"prompt": "write up the edits you just made so a reviewer can follow them", "harness": "claude-code", "gold": {"skill": "change-report"}, "source": "synthetic"}
+{"prompt": "record the invariants of the billing module in our .knowledge folder so nobody has to reverse-engineer them again", "harness": "claude-code", "gold": {"skill": "codebase-map"}, "source": "synthetic"}
+{"prompt": "the .knowledge concept for auth is stale after the refactor, update it", "harness": "claude-code", "gold": {"skill": "codebase-map"}, "source": "synthetic"}
+{"prompt": "where is the retry logic for webhooks handled? don't flood the context, just tell me the file", "harness": "claude-code", "gold": {"skill": "delegate-readonly"}, "source": "synthetic"}
+{"prompt": "trace how an order flows from the API down to the database and give me a short answer", "harness": "claude-code", "gold": {"skill": "delegate-readonly"}, "source": "synthetic"}
+{"prompt": "is there a skill I can install that generates changelogs?", "harness": "claude-code", "gold": {"skill": "find-skills"}, "source": "synthetic"}
+{"prompt": "how do I give claude a capability for managing terraform, is there something ready-made?", "harness": "claude-code", "gold": {"skill": "find-skills"}, "source": "synthetic"}
+{"prompt": "turn my research papers and notes folder into a knowledge graph", "harness": "claude-code", "gold": {"skill": "graphify"}, "source": "synthetic"}
+{"prompt": "build a graph of this whole corpus so I can ask how the pieces connect", "harness": "claude-code", "gold": {"skill": "graphify"}, "source": "synthetic"}
+{"prompt": "I want to add a new MCP tool to the playwright repo, how is that wired?", "harness": "claude-code", "gold": {"skill": "playwright-dev"}, "source": "synthetic"}
+{"prompt": "how do I vendor a new dependency into playwright core", "harness": "claude-code", "gold": {"skill": "playwright-dev"}, "source": "synthetic"}
+{"prompt": "bootstrap a basic RAG project with dense retrieval and a reranker in docker", "harness": "claude-code", "gold": {"skill": "rag-tier1-scaffold"}, "source": "synthetic"}
+{"prompt": "empty repo: set up a simple retrieve, rerank, answer pipeline on LanceDB", "harness": "claude-code", "gold": {"skill": "rag-tier1-scaffold"}, "source": "synthetic"}
+{"prompt": "upgrade my RAG to hybrid BM25 search and add an MCP retrieval server with an agent", "harness": "claude-code", "gold": {"skill": "rag-tier2-scaffold"}, "source": "synthetic"}
+{"prompt": "add RRF fusion and a langgraph agent on top of the tier 1 RAG", "harness": "claude-code", "gold": {"skill": "rag-tier2-scaffold"}, "source": "synthetic"}
+{"prompt": "add contextual embeddings and a golden-question eval harness to my RAG", "harness": "claude-code", "gold": {"skill": "rag-tier3-scaffold"}, "source": "synthetic"}
+{"prompt": "add an entity graph and an A/B eval comparison to the RAG project", "harness": "claude-code", "gold": {"skill": "rag-tier3-scaffold"}, "source": "synthetic"}
+{"prompt": "start a new Django + DRF API with JWT auth and a proper settings split", "harness": "claude-code", "gold": {"skill": "scaffold-backend"}, "source": "synthetic"}
+{"prompt": "create a hardened django backend for the new app", "harness": "claude-code", "gold": {"skill": "scaffold-backend"}, "source": "synthetic"}
+{"prompt": "set up a new React TypeScript frontend with react query and lazy routes", "harness": "claude-code", "gold": {"skill": "scaffold-frontend"}, "source": "synthetic"}
+{"prompt": "new strict TS react app with cookie auth, scaffold it for me", "harness": "claude-code", "gold": {"skill": "scaffold-frontend"}, "source": "synthetic"}
+{"prompt": "wire docker compose with nginx in front and a github actions CI", "harness": "claude-code", "gold": {"skill": "scaffold-infra"}, "source": "synthetic"}
+{"prompt": "add multi-stage dockerfiles, trivy scans and a pg_dump backup script", "harness": "claude-code", "gold": {"skill": "scaffold-infra"}, "source": "synthetic"}
+{"prompt": "make the smallest possible change to fix the null check in parser.py, touch nothing else", "harness": "claude-code", "gold": {"skill": "surgical-diff"}, "source": "synthetic"}
+{"prompt": "edit only the function signature in utils.py, no refactors or reformatting", "harness": "claude-code", "gold": {"skill": "surgical-diff"}, "source": "synthetic"}
+{"prompt": "explore the repo and find where feature flags are evaluated", "harness": "claude-code", "gold": {"skill": "explore"}, "source": "synthetic"}
+{"prompt": "have the explorer agent find every place we call the payments API", "harness": "claude-code", "gold": {"skill": "explore"}, "source": "synthetic"}
+{"prompt": "quick fix: the date formatter shows months off by one", "harness": "claude-code", "gold": {"skill": "fix"}, "source": "synthetic"}
+{"prompt": "small scoped fix for the typo in the signup email subject", "harness": "claude-code", "gold": {"skill": "fix"}, "source": "synthetic"}
+{"prompt": "write a handoff note so the next session can pick this up", "harness": "claude-code", "gold": {"skill": "handoff"}, "source": "synthetic"}
+{"prompt": "I'm stopping for today, leave a summary file for tomorrow's session", "harness": "claude-code", "gold": {"skill": "handoff"}, "source": "synthetic"}
+{"prompt": "did we already solve the websocket reconnect issue in a past session?", "harness": "claude-code", "gold": {"skill": "history"}, "source": "synthetic"}
+{"prompt": "search my previous claude sessions for how we configured sentry", "harness": "claude-code", "gold": {"skill": "history"}, "source": "synthetic"}
+{"prompt": "refresh the codebase knowledge map for the api folder", "harness": "claude-code", "gold": {"skill": "map"}, "source": "synthetic"}
+{"prompt": "seed the knowledge map for this new repo", "harness": "claude-code", "gold": {"skill": "map"}, "source": "synthetic"}
+{"prompt": "give me a quick orientation on where this project stands", "harness": "claude-code", "gold": {"skill": "project-context"}, "source": "synthetic"}
+{"prompt": "summarize the current state of this repo before we start", "harness": "claude-code", "gold": {"skill": "project-context"}, "source": "synthetic"}
+{"prompt": "generate the before/after change report for what we did today", "harness": "claude-code", "gold": {"skill": "report"}, "source": "synthetic"}
+{"prompt": "produce the change report for this session", "harness": "claude-code", "gold": {"skill": "report"}, "source": "synthetic"}
+{"prompt": "audit our django backend for security holes and N+1 queries", "harness": "claude-code", "gold": {"skill": "review-backend"}, "source": "synthetic"}
+{"prompt": "review the backend code against best practices", "harness": "claude-code", "gold": {"skill": "review-backend"}, "source": "synthetic"}
+{"prompt": "analyze the UI code and write a DESIGN.md with our design system", "harness": "claude-code", "gold": {"skill": "review-design"}, "source": "synthetic"}
+{"prompt": "derive a design system document from the existing frontend", "harness": "claude-code", "gold": {"skill": "review-design"}, "source": "synthetic"}
+{"prompt": "audit the react app for performance and accessibility problems", "harness": "claude-code", "gold": {"skill": "review-frontend"}, "source": "synthetic"}
+{"prompt": "review our typescript frontend for security issues like tokens in localStorage", "harness": "claude-code", "gold": {"skill": "review-frontend"}, "source": "synthetic"}
+{"prompt": "check our docker and CI setup for security problems", "harness": "claude-code", "gold": {"skill": "review-infra"}, "source": "synthetic"}
+{"prompt": "audit the github actions workflows and compose files", "harness": "claude-code", "gold": {"skill": "review-infra"}, "source": "synthetic"}
+{"prompt": "combine all the review findings into one prioritized plan", "harness": "claude-code", "gold": {"skill": "review-prioritize"}, "source": "synthetic"}
+{"prompt": "merge the backend, frontend and infra reviews into a ranked todo list", "harness": "claude-code", "gold": {"skill": "review-prioritize"}, "source": "synthetic"}
+{"prompt": "implement the CSV export feature with the full plan, diff and report discipline", "harness": "claude-code", "gold": {"skill": "task"}, "source": "synthetic"}
+{"prompt": "do this change properly end to end: add rate limiting to the login endpoint", "harness": "claude-code", "gold": {"skill": "task"}, "source": "synthetic"}
+{"prompt": "make a poster for our meetup as a PNG", "harness": "claude-code", "gold": {"skill": "anthropic-skills:canvas-design"}, "source": "synthetic"}
+{"prompt": "design an abstract art print as a pdf for the office wall", "harness": "claude-code", "gold": {"skill": "anthropic-skills:canvas-design"}, "source": "synthetic"}
+{"prompt": "create a shared doc for the team's onboarding plan that people can comment on", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docs"}, "source": "synthetic"}
+{"prompt": "start a living doc for the Q4 roadmap the team can edit", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docs"}, "source": "synthetic"}
+{"prompt": "turn these notes into a Word document with a table of contents", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docx"}, "source": "synthetic"}
+{"prompt": "accept the tracked changes in contract.docx", "harness": "claude-code", "gold": {"skill": "anthropic-skills:docx"}, "source": "synthetic"}
+{"prompt": "import my ChatGPT memory export into claude", "harness": "claude-code", "gold": {"skill": "anthropic-skills:import-memory"}, "source": "synthetic"}
+{"prompt": "here's a memory dump from another assistant, bring it in", "harness": "claude-code", "gold": {"skill": "anthropic-skills:import-memory"}, "source": "synthetic"}
+{"prompt": "show me my morning brief", "harness": "claude-code", "gold": {"skill": "anthropic-skills:morning"}, "source": "synthetic"}
+{"prompt": "set up my morning brief to run every weekday", "harness": "claude-code", "gold": {"skill": "anthropic-skills:morning"}, "source": "synthetic"}
+{"prompt": "merge these three PDFs and add page numbers", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pdf"}, "source": "synthetic"}
+{"prompt": "extract the tables from this scanned pdf", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pdf"}, "source": "synthetic"}
+{"prompt": "make a 10-slide deck from this report", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pptx"}, "source": "synthetic"}
+{"prompt": "update the pitch deck pptx with the new numbers", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pptx"}, "source": "synthetic"}
+{"prompt": "help me create a new skill for our deploy process", "harness": "claude-code", "gold": {"skill": "anthropic-skills:skill-creator"}, "source": "synthetic"}
+{"prompt": "benchmark my skill's triggering and improve its description", "harness": "claude-code", "gold": {"skill": "anthropic-skills:skill-creator"}, "source": "synthetic"}
+{"prompt": "clean up this messy spreadsheet and add totals", "harness": "claude-code", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "synthetic"}
+{"prompt": "convert this csv into a formatted excel file with a chart", "harness": "claude-code", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "synthetic"}
+{"prompt": "talk like a caveman from now on, fewer tokens", "harness": "claude-code", "gold": {"skill": "caveman:caveman"}, "source": "synthetic"}
+{"prompt": "be brief, switch to caveman mode", "harness": "claude-code", "gold": {"skill": "caveman:caveman"}, "source": "synthetic"}
+{"prompt": "write a terse commit message for these staged changes", "harness": "claude-code", "gold": {"skill": "caveman:caveman-commit"}, "source": "synthetic"}
+{"prompt": "generate a caveman commit for this diff", "harness": "claude-code", "gold": {"skill": "caveman:caveman-commit"}, "source": "synthetic"}
+{"prompt": "what caveman commands are there?", "harness": "claude-code", "gold": {"skill": "caveman:caveman-help"}, "source": "synthetic"}
+{"prompt": "show me the caveman help card", "harness": "claude-code", "gold": {"skill": "caveman:caveman-help"}, "source": "synthetic"}
+{"prompt": "review this PR with one-line comments, no fluff", "harness": "claude-code", "gold": {"skill": "caveman:caveman-review"}, "source": "synthetic"}
+{"prompt": "ultra short code review of the diff please", "harness": "claude-code", "gold": {"skill": "caveman:caveman-review"}, "source": "synthetic"}
+{"prompt": "compress my CLAUDE.md to save tokens", "harness": "claude-code", "gold": {"skill": "caveman:compress"}, "source": "synthetic"}
+{"prompt": "shrink the todo notes file into caveman format", "harness": "claude-code", "gold": {"skill": "caveman:compress"}, "source": "synthetic"}
+{"prompt": "audit the signup page for accessibility: labels, focus order, contrast", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:a11y-debugging"}, "source": "synthetic"}
+{"prompt": "check keyboard navigation and aria attributes on our modal", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:a11y-debugging"}, "source": "synthetic"}
+{"prompt": "open the app in chrome and look at which network requests fail", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:chrome-devtools"}, "source": "synthetic"}
+{"prompt": "use devtools to find out why the save button does nothing", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:chrome-devtools"}, "source": "synthetic"}
+{"prompt": "our largest contentful paint is 4 seconds, find out why", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:debug-optimize-lcp"}, "source": "synthetic"}
+{"prompt": "improve the LCP core web vital on the landing page", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:debug-optimize-lcp"}, "source": "synthetic"}
+{"prompt": "the chrome devtools mcp can't connect to the browser, list_pages fails", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:troubleshooting"}, "source": "synthetic"}
+{"prompt": "new_page keeps erroring in the chrome devtools server, help", "harness": "claude-code", "gold": {"skill": "chrome-devtools-mcp:troubleshooting"}, "source": "synthetic"}
+{"prompt": "what hooks and subagents should I set up for this repo?", "harness": "claude-code", "gold": {"skill": "claude-code-setup:claude-automation-recommender"}, "source": "synthetic"}
+{"prompt": "recommend claude code automations for this project", "harness": "claude-code", "gold": {"skill": "claude-code-setup:claude-automation-recommender"}, "source": "synthetic"}
+{"prompt": "where can I learn to use claude well, is there a course?", "harness": "claude-code", "gold": {"skill": "document-skills:academy-guide"}, "source": "synthetic"}
+{"prompt": "how do I get better at prompting claude, any official training?", "harness": "claude-code", "gold": {"skill": "document-skills:academy-guide"}, "source": "synthetic"}
+{"prompt": "create generative art in p5.js with seeded randomness", "harness": "claude-code", "gold": {"skill": "document-skills:algorithmic-art"}, "source": "synthetic"}
+{"prompt": "make an interactive flow-field artwork", "harness": "claude-code", "gold": {"skill": "document-skills:algorithmic-art"}, "source": "synthetic"}
+{"prompt": "apply anthropic's brand colors and fonts to this slide", "harness": "claude-code", "gold": {"skill": "document-skills:brand-guidelines"}, "source": "synthetic"}
+{"prompt": "style this artifact with the official anthropic typography", "harness": "claude-code", "gold": {"skill": "document-skills:brand-guidelines"}, "source": "synthetic"}
+{"prompt": "create a minimalist conference poster as a png", "harness": "claude-code", "gold": {"skill": "document-skills:canvas-design"}, "source": "synthetic"}
+{"prompt": "design a static art piece and export it as a PDF", "harness": "claude-code", "gold": {"skill": "document-skills:canvas-design"}, "source": "synthetic"}
+{"prompt": "which claude model id should I use and what does it cost?", "harness": "claude-code", "gold": {"skill": "document-skills:claude-api"}, "source": "synthetic"}
+{"prompt": "how do I stream responses with the anthropic python sdk", "harness": "claude-code", "gold": {"skill": "document-skills:claude-api"}, "source": "synthetic"}
+{"prompt": "should I quit my job to start this company? give me your honest advice", "harness": "claude-code", "gold": {"skill": "document-skills:discernment-nudge"}, "source": "synthetic"}
+{"prompt": "draft the email letting my contractor go, I'll send it as is", "harness": "claude-code", "gold": {"skill": "document-skills:discernment-nudge"}, "source": "synthetic"}
+{"prompt": "help me co-write the architecture doc step by step", "harness": "claude-code", "gold": {"skill": "document-skills:doc-coauthoring"}, "source": "synthetic"}
+{"prompt": "let's write a proposal together with a structured workflow", "harness": "claude-code", "gold": {"skill": "document-skills:doc-coauthoring"}, "source": "synthetic"}
+{"prompt": "create a word report with headers and page numbers", "harness": "claude-code", "gold": {"skill": "document-skills:docx"}, "source": "synthetic"}
+{"prompt": "read this .docx and summarize it", "harness": "claude-code", "gold": {"skill": "document-skills:docx"}, "source": "synthetic"}
+{"prompt": "make the dashboard look distinctive, not like a template", "harness": "claude-code", "gold": {"skill": "document-skills:frontend-design"}, "source": "synthetic"}
+{"prompt": "give this landing page a bold visual direction", "harness": "claude-code", "gold": {"skill": "document-skills:frontend-design"}, "source": "synthetic"}
+{"prompt": "write the weekly status update for leadership", "harness": "claude-code", "gold": {"skill": "document-skills:internal-comms"}, "source": "synthetic"}
+{"prompt": "draft an internal announcement about the reorg", "harness": "claude-code", "gold": {"skill": "document-skills:internal-comms"}, "source": "synthetic"}
+{"prompt": "build an MCP server that wraps our internal API", "harness": "claude-code", "gold": {"skill": "document-skills:mcp-builder"}, "source": "synthetic"}
+{"prompt": "how should I design the tools for a new MCP server in typescript", "harness": "claude-code", "gold": {"skill": "document-skills:mcp-builder"}, "source": "synthetic"}
+{"prompt": "split this PDF into chapters", "harness": "claude-code", "gold": {"skill": "document-skills:pdf"}, "source": "synthetic"}
+{"prompt": "fill out this PDF form with my details", "harness": "claude-code", "gold": {"skill": "document-skills:pdf"}, "source": "synthetic"}
+{"prompt": "create slides for the quarterly review", "harness": "claude-code", "gold": {"skill": "document-skills:pptx"}, "source": "synthetic"}
+{"prompt": "extract the speaker notes from this pptx", "harness": "claude-code", "gold": {"skill": "document-skills:pptx"}, "source": "synthetic"}
+{"prompt": "write a new skill that teaches claude our code review checklist", "harness": "claude-code", "gold": {"skill": "document-skills:skill-creator"}, "source": "synthetic"}
+{"prompt": "run evals on my skill and optimize its description", "harness": "claude-code", "gold": {"skill": "document-skills:skill-creator"}, "source": "synthetic"}
+{"prompt": "make an animated gif for our slack channel celebrating the launch", "harness": "claude-code", "gold": {"skill": "document-skills:slack-gif-creator"}, "source": "synthetic"}
+{"prompt": "create a small looping emoji gif for slack", "harness": "claude-code", "gold": {"skill": "document-skills:slack-gif-creator"}, "source": "synthetic"}
+{"prompt": "apply a dark ocean theme to this artifact", "harness": "claude-code", "gold": {"skill": "document-skills:theme-factory"}, "source": "synthetic"}
+{"prompt": "restyle the report with one of the preset themes", "harness": "claude-code", "gold": {"skill": "document-skills:theme-factory"}, "source": "synthetic"}
+{"prompt": "build a multi-component html artifact with react and tailwind", "harness": "claude-code", "gold": {"skill": "document-skills:web-artifacts-builder"}, "source": "synthetic"}
+{"prompt": "create an elaborate interactive claude.ai artifact with state and routing", "harness": "claude-code", "gold": {"skill": "document-skills:web-artifacts-builder"}, "source": "synthetic"}
+{"prompt": "test our local web app's login flow and take screenshots", "harness": "claude-code", "gold": {"skill": "document-skills:webapp-testing"}, "source": "synthetic"}
+{"prompt": "verify the frontend works by clicking through it in a real browser", "harness": "claude-code", "gold": {"skill": "document-skills:webapp-testing"}, "source": "synthetic"}
+{"prompt": "build a budget model in a spreadsheet with formulas", "harness": "claude-code", "gold": {"skill": "document-skills:xlsx"}, "source": "synthetic"}
+{"prompt": "fix the broken formulas in this xlsx", "harness": "claude-code", "gold": {"skill": "document-skills:xlsx"}, "source": "synthetic"}
+{"prompt": "design a distinctive UI for the settings page", "harness": "claude-code", "gold": {"skill": "frontend-design:frontend-design"}, "source": "synthetic"}
+{"prompt": "the onboarding flow looks generic, give it strong typography and character", "harness": "claude-code", "gold": {"skill": "frontend-design:frontend-design"}, "source": "synthetic"}
+{"prompt": "stop the ralph loop", "harness": "claude-code", "gold": {"skill": "ralph-loop:cancel-ralph"}, "source": "synthetic"}
+{"prompt": "cancel the running ralph loop now", "harness": "claude-code", "gold": {"skill": "ralph-loop:cancel-ralph"}, "source": "synthetic"}
+{"prompt": "what is the ralph loop plugin and how do I use it?", "harness": "claude-code", "gold": {"skill": "ralph-loop:help"}, "source": "synthetic"}
+{"prompt": "explain the ralph loop commands", "harness": "claude-code", "gold": {"skill": "ralph-loop:help"}, "source": "synthetic"}
+{"prompt": "start a ralph loop that keeps iterating on the failing tests", "harness": "claude-code", "gold": {"skill": "ralph-loop:ralph-loop"}, "source": "synthetic"}
+{"prompt": "run a ralph loop in this session", "harness": "claude-code", "gold": {"skill": "ralph-loop:ralph-loop"}, "source": "synthetic"}
+{"prompt": "let's build a habit tracker app", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "synthetic"}
+{"prompt": "I want to add a recommendations feature, where do we start?", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "synthetic"}
+{"prompt": "why did the last session keep redoing the same work? diagnose it", "harness": "claude-code", "gold": {"skill": "superpowers:diagnosing-superpowers"}, "source": "synthetic"}
+{"prompt": "the skill didn't fire and the session was expensive, figure out what went wrong", "harness": "claude-code", "gold": {"skill": "superpowers:diagnosing-superpowers"}, "source": "synthetic"}
+{"prompt": "these three bugs are independent, work on them in parallel", "harness": "claude-code", "gold": {"skill": "superpowers:dispatching-parallel-agents"}, "source": "synthetic"}
+{"prompt": "split the migration of the four services across parallel agents", "harness": "claude-code", "gold": {"skill": "superpowers:dispatching-parallel-agents"}, "source": "synthetic"}
+{"prompt": "execute plan.md task by task here yourself", "harness": "claude-code", "gold": {"skill": "superpowers:executing-plans"}, "source": "synthetic"}
+{"prompt": "go ahead and implement the approved plan inline", "harness": "claude-code", "gold": {"skill": "superpowers:executing-plans"}, "source": "synthetic"}
+{"prompt": "tests pass, how do we wrap up this branch: merge or PR?", "harness": "claude-code", "gold": {"skill": "superpowers:finishing-a-development-branch"}, "source": "synthetic"}
+{"prompt": "the feature is done, finish the branch", "harness": "claude-code", "gold": {"skill": "superpowers:finishing-a-development-branch"}, "source": "synthetic"}
+{"prompt": "the reviewer left comments on my PR and some look wrong, address them", "harness": "claude-code", "gold": {"skill": "superpowers:receiving-code-review"}, "source": "synthetic"}
+{"prompt": "here's feedback from code review, work through it", "harness": "claude-code", "gold": {"skill": "superpowers:receiving-code-review"}, "source": "synthetic"}
+{"prompt": "the feature is complete, get it reviewed before merging", "harness": "claude-code", "gold": {"skill": "superpowers:requesting-code-review"}, "source": "synthetic"}
+{"prompt": "request a code review of what we built", "harness": "claude-code", "gold": {"skill": "superpowers:requesting-code-review"}, "source": "synthetic"}
+{"prompt": "execute the plan with a fresh subagent per task plus reviews", "harness": "claude-code", "gold": {"skill": "superpowers:subagent-driven-development"}, "source": "synthetic"}
+{"prompt": "use subagents to implement each task of the plan", "harness": "claude-code", "gold": {"skill": "superpowers:subagent-driven-development"}, "source": "synthetic"}
+{"prompt": "my pytest suite started failing with a KeyError after yesterday's refactor, figure out why", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "synthetic"}
+{"prompt": "the app crashes intermittently on startup, find the root cause", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "synthetic"}
+{"prompt": "implement the discount calculation, tests first", "harness": "claude-code", "gold": {"skill": "superpowers:test-driven-development"}, "source": "synthetic"}
+{"prompt": "add the new validation rule using TDD", "harness": "claude-code", "gold": {"skill": "superpowers:test-driven-development"}, "source": "synthetic"}
+{"prompt": "set up an isolated worktree for this feature", "harness": "claude-code", "gold": {"skill": "superpowers:using-git-worktrees"}, "source": "synthetic"}
+{"prompt": "I don't want to touch main, create a separate workspace for this work", "harness": "claude-code", "gold": {"skill": "superpowers:using-git-worktrees"}, "source": "synthetic"}
+{"prompt": "what skills do you have and how do you decide when to use them?", "harness": "claude-code", "gold": {"skill": "superpowers:using-superpowers"}, "source": "synthetic"}
+{"prompt": "how do superpowers skills work in this session?", "harness": "claude-code", "gold": {"skill": "superpowers:using-superpowers"}, "source": "synthetic"}
+{"prompt": "before you say it's done, prove the tests pass", "harness": "claude-code", "gold": {"skill": "superpowers:verification-before-completion"}, "source": "synthetic"}
+{"prompt": "verify the fix actually works before committing", "harness": "claude-code", "gold": {"skill": "superpowers:verification-before-completion"}, "source": "synthetic"}
+{"prompt": "write the implementation plan for the approved spec", "harness": "claude-code", "gold": {"skill": "superpowers:writing-plans"}, "source": "synthetic"}
+{"prompt": "we have the requirements, break them into a step-by-step plan", "harness": "claude-code", "gold": {"skill": "superpowers:writing-plans"}, "source": "synthetic"}
+{"prompt": "edit my skill and verify it works before deploying it", "harness": "claude-code", "gold": {"skill": "superpowers:writing-skills"}, "source": "synthetic"}
+{"prompt": "create a new superpowers-style skill and test it", "harness": "claude-code", "gold": {"skill": "superpowers:writing-skills"}, "source": "synthetic"}
+{"prompt": "grab the design context for this figma frame so I can implement it", "harness": "claude-code", "gold": {"connector": "Figma", "tool": "mcp__claude_ai_Figma__get_design_context"}, "source": "synthetic"}
+{"prompt": "export the icons from the figma file", "harness": "claude-code", "gold": {"connector": "Figma", "tool": "mcp__claude_ai_Figma__download_assets"}, "source": "synthetic"}
+{"prompt": "find the thread where Ana sent the signed contract last week", "harness": "claude-code", "gold": {"connector": "Gmail", "tool": "mcp__claude_ai_Gmail__search_threads"}, "source": "synthetic"}
+{"prompt": "draft a reply to the investor email thanking them for the call", "harness": "claude-code", "gold": {"connector": "Gmail", "tool": "mcp__claude_ai_Gmail__create_draft"}, "source": "synthetic"}
+{"prompt": "what meetings do I have tomorrow?", "harness": "claude-code", "gold": {"connector": "Google Calendar", "tool": "mcp__claude_ai_Google_Calendar__list_events"}, "source": "synthetic"}
+{"prompt": "schedule a 30 minute sync with Joao on Friday", "harness": "claude-code", "gold": {"connector": "Google Calendar", "tool": "mcp__claude_ai_Google_Calendar__create_event"}, "source": "synthetic"}
+{"prompt": "find the Q3 budget spreadsheet in my drive", "harness": "claude-code", "gold": {"connector": "Google Drive", "tool": "mcp__claude_ai_Google_Drive__search_files"}, "source": "synthetic"}
+{"prompt": "read the product brief doc from google drive", "harness": "claude-code", "gold": {"connector": "Google Drive", "tool": "mcp__claude_ai_Google_Drive__read_file_content"}, "source": "synthetic"}
+{"prompt": "what did the team say in the launch channel today?", "harness": "claude-code", "gold": {"connector": "Slack", "tool": "mcp__claude_ai_Slack__slack_read_channel"}, "source": "synthetic"}
+{"prompt": "post in #general that the deploy is done", "harness": "claude-code", "gold": {"connector": "Slack", "tool": "mcp__claude_ai_Slack__slack_send_message"}, "source": "synthetic"}
+{"prompt": "show me an inline chart of these monthly numbers", "harness": "claude-code", "gold": {"connector": "visualize", "tool": "mcp__claude_ai_visualize__show_widget"}, "source": "synthetic"}
+{"prompt": "render a diagram of the architecture as a widget", "harness": "claude-code", "gold": {"connector": "visualize", "tool": "mcp__claude_ai_visualize__show_widget"}, "source": "synthetic"}
+{"prompt": "what's the current API for react query useMutation? check the docs", "harness": "claude-code", "gold": {"connector": "context7", "tool": "mcp__context7__resolve-library-id"}, "source": "synthetic"}
+{"prompt": "look up the latest django 5 docs for async views", "harness": "claude-code", "gold": {"connector": "context7", "tool": "mcp__context7__resolve-library-id"}, "source": "synthetic"}
+{"prompt": "open an issue in the repo about the flaky login test", "harness": "claude-code", "gold": {"connector": "github", "tool": "mcp__github__create_issue"}, "source": "synthetic"}
+{"prompt": "list the open pull requests on the layla repo", "harness": "claude-code", "gold": {"connector": "github", "tool": "mcp__github__list_pull_requests"}, "source": "synthetic"}
+{"prompt": "how did I sleep this week according to whoop?", "harness": "claude-code", "gold": {"connector": "whoop", "tool": "mcp__whoop__whoop-get-sleep-collection"}, "source": "synthetic"}
+{"prompt": "what's my whoop recovery score today?", "harness": "claude-code", "gold": {"connector": "whoop", "tool": "mcp__whoop__whoop-get-recovery-collection"}, "source": "synthetic"}
+{"prompt": "what's the blast radius if I change the payment service?", "harness": "claude-code", "gold": {"connector": "code-review-graph", "tool": "mcp__code-review-graph__get_impact_radius_tool"}, "source": "synthetic"}
+{"prompt": "build the code graph for this repo so reviews are cheaper", "harness": "claude-code", "gold": {"connector": "code-review-graph", "tool": "mcp__code-review-graph__build_or_update_graph_tool"}, "source": "synthetic"}
+{"prompt": "run a lighthouse audit on localhost:3000", "harness": "claude-code", "gold": {"connector": "chrome-devtools", "tool": "mcp__plugin_chrome-devtools-mcp_chrome-devtools__lighthouse_audit"}, "source": "synthetic"}
+{"prompt": "check the console errors in the open chrome tab", "harness": "claude-code", "gold": {"connector": "chrome-devtools", "tool": "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_console_messages"}, "source": "synthetic"}
+{"prompt": "open example.com in the browser and take a screenshot", "harness": "claude-code", "gold": {"connector": "playwright", "tool": "mcp__plugin_playwright_playwright__browser_navigate"}, "source": "synthetic"}
+{"prompt": "the login page is already open in the browser, fill in the form and submit", "harness": "claude-code", "gold": {"connector": "playwright", "tool": "mcp__plugin_playwright_playwright__browser_fill_form"}, "source": "synthetic"}
+{"prompt": "find every reference to the UserService class by symbol", "harness": "claude-code", "gold": {"connector": "serena", "tool": "mcp__plugin_serena_serena__find_referencing_symbols"}, "source": "synthetic"}
+{"prompt": "rename the symbol calculateTotal across the whole project", "harness": "claude-code", "gold": {"connector": "serena", "tool": "mcp__plugin_serena_serena__rename_symbol"}, "source": "synthetic"}
+{"prompt": "start a doc my team can comment on for the hiring plan", "harness": "cowork", "gold": {"skill": "anthropic-skills:docs"}, "source": "synthetic"}
+{"prompt": "bring in the memories I exported from gemini", "harness": "cowork", "gold": {"skill": "anthropic-skills:import-memory"}, "source": "synthetic"}
+{"prompt": "what's on my morning brief today?", "harness": "cowork", "gold": {"skill": "anthropic-skills:morning"}, "source": "synthetic"}
+{"prompt": "make a skill that formats my weekly invoices", "harness": "cowork", "gold": {"skill": "anthropic-skills:skill-creator"}, "source": "synthetic"}
+{"prompt": "design a birthday card image for my sister", "harness": "cowork", "gold": {"skill": "anthropic-skills:canvas-design"}, "source": "synthetic"}
+{"prompt": "turn my expenses list into a spreadsheet with monthly totals", "harness": "cowork", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "synthetic"}
+{"prompt": "build a short slide deck about our summer offsite", "harness": "cowork", "gold": {"skill": "anthropic-skills:pptx"}, "source": "synthetic"}
+{"prompt": "combine the scanned receipts into one pdf", "harness": "cowork", "gold": {"skill": "anthropic-skills:pdf"}, "source": "synthetic"}
+{"prompt": "write a cover letter as a word document", "harness": "cowork", "gold": {"skill": "anthropic-skills:docx"}, "source": "synthetic"}
+{"prompt": "every monday at 9 summarize my unread email", "harness": "cowork", "gold": {"skill": "anthropic-skills:schedule"}, "source": "synthetic"}
+{"prompt": "help me get claude set up with the right plugins for my role", "harness": "cowork", "gold": {"skill": "anthropic-skills:setup-claude"}, "source": "synthetic"}
+{"prompt": "walk me through setting up cowork and connecting my tools", "harness": "cowork", "gold": {"skill": "anthropic-skills:setup-cowork"}, "source": "synthetic"}
+{"prompt": "clean up my memory files, merge the duplicates and drop stale facts", "harness": "cowork", "gold": {"skill": "anthropic-skills:consolidate-memory"}, "source": "synthetic"}
+{"prompt": "where did the tokens in this session go?", "harness": "cowork", "gold": {"skill": "anthropic-skills:explain-usage"}, "source": "synthetic"}
+{"prompt": "find the email from the landlord about the lease renewal", "harness": "cowork", "gold": {"connector": "Gmail"}, "source": "synthetic"}
+{"prompt": "am I free on thursday afternoon?", "harness": "cowork", "gold": {"connector": "Google Calendar"}, "source": "synthetic"}
+{"prompt": "where is the tax folder in my drive?", "harness": "cowork", "gold": {"connector": "Google Drive"}, "source": "synthetic"}
+{"prompt": "catch me up on the design channel in slack", "harness": "cowork", "gold": {"connector": "Slack"}, "source": "synthetic"}
+{"prompt": "pull the specs from the checkout screen in figma", "harness": "cowork", "gold": {"connector": "Figma"}, "source": "synthetic"}
+{"prompt": "draw a quick chart of my spending by category", "harness": "cowork", "gold": {"connector": "visualize"}, "source": "synthetic"}
+{"prompt": "o meu teste do pytest começou a falhar com KeyError depois do refactor, descobre porquê", "harness": "claude-code", "gold": {"skill": "superpowers:systematic-debugging"}, "source": "synthetic-pt"}
+{"prompt": "faz-me uma apresentação de 5 slides sobre os resultados do trimestre", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pptx"}, "source": "synthetic-pt"}
+{"prompt": "junta estes três PDFs num só ficheiro", "harness": "claude-code", "gold": {"skill": "anthropic-skills:pdf"}, "source": "synthetic-pt"}
+{"prompt": "encontra o email da Ana com o contrato assinado", "harness": "claude-code", "gold": {"connector": "Gmail", "tool": "mcp__claude_ai_Gmail__search_threads"}, "source": "synthetic-pt"}
+{"prompt": "que reuniões tenho amanhã?", "harness": "claude-code", "gold": {"connector": "Google Calendar", "tool": "mcp__claude_ai_Google_Calendar__list_events"}, "source": "synthetic-pt"}
+{"prompt": "vamos construir uma app para gerir reservas de restaurante", "harness": "claude-code", "gold": {"skill": "superpowers:brainstorming"}, "source": "synthetic-pt"}
+{"prompt": "escreve o plano de implementação para a spec aprovada", "harness": "claude-code", "gold": {"skill": "superpowers:writing-plans"}, "source": "synthetic-pt"}
+{"prompt": "limpa esta folha de cálculo e acrescenta os totais", "harness": "claude-code", "gold": {"skill": "anthropic-skills:xlsx"}, "source": "synthetic-pt"}
+{"prompt": "abre o site no browser e tira um screenshot", "harness": "claude-code", "gold": {"connector": "playwright", "tool": "mcp__plugin_playwright_playwright__browser_navigate"}, "source": "synthetic-pt"}
+{"prompt": "como dormi esta semana segundo o whoop?", "harness": "claude-code", "gold": {"connector": "whoop", "tool": "mcp__whoop__whoop-get-sleep-collection"}, "source": "synthetic-pt"}
+{"prompt": "cria uma issue no github sobre o teste de login instável", "harness": "claude-code", "gold": {"connector": "github", "tool": "mcp__github__create_issue"}, "source": "synthetic-pt"}
+{"prompt": "escreve um resumo para a próxima sessão continuar o trabalho", "harness": "claude-code", "gold": {"skill": "handoff"}, "source": "synthetic-pt"}
