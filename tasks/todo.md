@@ -13,7 +13,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 8. Hint format + Laya scorer
 - [x] 9. Eval dataset from transcripts
 - [x] 10. Synthetic dev prompts (+ Portuguese)
-- [ ] 11. Eval runner: BM25 vs cosine vs Laya, calibration, gate lines
+- [x] 11. Eval runner: BM25 vs cosine vs Laya, calibration, gate lines
 - [ ] 12. GATE: user go/no-go
 
 ## Phase 1 — build (only after gate passes)
