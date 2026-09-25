@@ -24,7 +24,7 @@ QUESTIONS = {
 }
 PLURAL = {"skill": "skills", "connector": "connectors", "tool": "tools"}
 DEFAULT_K = {"skill": 5, "connector": 5, "tool": 5}  # 6 options with none: inside Laya's calibrated buckets
-DEFAULT_TAU = {"skill": 0.5, "connector": 0.5, "tool": 0.5}  # precision ≥ 0.75 with ≤ 10% hints on unrelated turns
+DEFAULT_TAU = {"skill": 0.5, "connector": 0.6, "tool": 0.5}  # precision ≥ 0.75 with ≤ 10% hints on unrelated turns
 DEFAULT_CAP = {"skill": 3, "connector": 2, "tool": 3}
 Scores = dict[str, list[tuple[str, float]]]
 
