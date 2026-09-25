@@ -9,7 +9,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 4. Catalog: skills + slash commands
 - [x] 5. Catalog: connectors, tools, `discover()` + TTL
 - [x] 6. Tool cache refresh (local stdio MCP servers)
-- [ ] 7. Engine: shortlist, choice + none, thresholds, caches
+- [x] 7. Engine: shortlist, choice + none, thresholds, caches
 - [ ] 8. Hint format + Laya scorer
 - [ ] 9. Eval dataset from transcripts
 - [ ] 10. Synthetic dev prompts (+ Portuguese)
