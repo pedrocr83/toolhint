@@ -34,13 +34,27 @@ def test_calibrate_treats_none_first_as_abstain():
     rows = [{"prompt": p, "harness": "claude-code", "gold": {"skill": "x"}} for p in ("a", "b", "c")]
     scored = {"a": {"skill": [("x", 0.8)]}, "b": {"skill": [("y", 0.6)]}, "c": {"skill": [(NONE_ID, 0.9)]}}
     assert calibrate(rows, "skill", scored, taus=(0.5, 0.7)) == [
-        {"tau": 0.5, "precision": 0.5, "recall": 0.333}, {"tau": 0.7, "precision": 1.0, "recall": 0.333}]
+        {"tau": 0.5, "precision": 0.5, "recall": 0.333, "alarm": 0.0},
+        {"tau": 0.7, "precision": 1.0, "recall": 0.333, "alarm": 0.0}]
+
+
+def test_calibrate_reports_alarm_rate_on_unlabeled_turns():
+    rows = [{"prompt": "a", "harness": "claude-code", "gold": {"skill": "x"}}]
+    scored = {"a": {"skill": [("x", 0.8)]}, "n1": {"skill": [("y", 0.6)]}, "n2": {"skill": [(NONE_ID, 0.9)]}}
+    table = calibrate(rows, "skill", scored, taus=(0.5, 0.7), negatives=["n1", "n2"])
+    assert [row["alarm"] for row in table] == [0.5, 0.0]
 
 
 def test_pick_tau_prefers_smallest_tau_meeting_precision_else_best_f1():
     table = [{"tau": 0.2, "precision": 0.6, "recall": 0.9}, {"tau": 0.3, "precision": 0.8, "recall": 0.7}]
     assert pick_tau(table, 0.75) == 0.3
     assert pick_tau([{"tau": 0.2, "precision": 0.5, "recall": 0.9}, {"tau": 0.3, "precision": 0.6, "recall": 0.2}], 0.75) == 0.2
+
+
+def test_pick_tau_keeps_false_alarms_under_the_cap():
+    table = [{"tau": 0.2, "precision": 0.8, "recall": 0.7, "alarm": 0.6},
+             {"tau": 0.5, "precision": 0.9, "recall": 0.3, "alarm": 0.08}]
+    assert pick_tau(table, 0.75, max_alarm=0.10) == 0.5
 
 
 def test_none_rate_counts_turns_where_every_kind_abstains():

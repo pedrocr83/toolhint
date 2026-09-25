@@ -18,7 +18,7 @@ from .dataset import read_jsonl
 from .engine import NONE_ID, Engine, EngineConfig, doc_text, short_key
 from .items import KINDS, Item
 
-TAUS = (0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7)
+TAUS = (0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 RankFn = Callable[[str], dict[str, list[str]]]
 Scored = dict[str, dict[str, list[tuple[str, float]]]]
 Canon = Mapping[str, Mapping[str, str]]
@@ -32,6 +32,7 @@ class Inputs:
     test: list[dict]
     dev: list[dict]
     negatives: list[dict]
+    natural: list[dict]
 
 
 def canonical_ids(items: Sequence[Item]) -> dict[str, str]:
@@ -119,28 +120,39 @@ def none_rate(rows: list[dict], rankers: dict[str, RankFn]) -> float:
     return round(silent / total, 3) if total else 0.0
 
 
+def shows(ranked: list[tuple[str, float]], tau: float) -> bool:
+    """Whether the engine would surface this kind: a real top candidate at or above tau ('none' first abstains)."""
+    return bool(ranked) and ranked[0][0] != NONE_ID and ranked[0][1] >= tau
+
+
 def calibrate(rows: list[dict], kind: str, scored: Scored, taus: Sequence[float] = TAUS,
-              canon: Canon | None = None) -> list[dict]:
-    """Precision/recall of 'top candidate is gold and p >= tau'; 'none' first means abstain."""
+              canon: Canon | None = None, negatives: Sequence[str] = ()) -> list[dict]:
+    """Precision/recall of 'top candidate is gold and p >= tau', plus the alarm rate: the share of
+    unlabeled prompts (real turns that used no skill or tool) that would still get a hint."""
     labeled = [row for row in rows if row["gold"].get(kind) and row["prompt"] in scored]
+    unlabeled = [prompt for prompt in negatives if prompt in scored]
     table = []
     for tau in taus:
         predicted = correct = 0
         for row in labeled:
             ranked = scored[row["prompt"]].get(kind, [])
-            if not ranked or ranked[0][0] == NONE_ID or ranked[0][1] < tau:
+            if not shows(ranked, tau):
                 continue
             same = (canon or {}).get(row["harness"], {})
             predicted += 1
             correct += same.get(ranked[0][0], ranked[0][0]) == same.get(row["gold"][kind], row["gold"][kind])
+        alarms = sum(shows(scored[prompt].get(kind, []), tau) for prompt in unlabeled)
         table.append({"tau": tau, "precision": round(correct / predicted, 3) if predicted else 0.0,
-                      "recall": round(correct / len(labeled), 3) if labeled else 0.0})
+                      "recall": round(correct / len(labeled), 3) if labeled else 0.0,
+                      "alarm": round(alarms / len(unlabeled), 3) if unlabeled else 0.0})
     return table
 
 
-def pick_tau(table: list[dict], min_precision: float = 0.75) -> float:
-    """Smallest tau reaching min_precision; otherwise the tau with the best F1."""
-    for row in table:
+def pick_tau(table: list[dict], min_precision: float = 0.75, max_alarm: float = 0.10) -> float:
+    """Smallest tau reaching min_precision while alarming on at most max_alarm of unlabeled turns;
+    otherwise the best F1 among those quiet rows (the highest tau when none is quiet enough)."""
+    quiet = [row for row in table if row.get("alarm", 0.0) <= max_alarm] or table[-1:]
+    for row in quiet:
         if row["precision"] >= min_precision:
             return row["tau"]
 
@@ -148,7 +160,7 @@ def pick_tau(table: list[dict], min_precision: float = 0.75) -> float:
         total = row["precision"] + row["recall"]
         return 2 * row["precision"] * row["recall"] / total if total else 0.0
 
-    return max(table, key=f1)["tau"]
+    return max(quiet, key=f1)["tau"]
 
 
 def vram_mb() -> int:
@@ -165,15 +177,18 @@ def run_model(model: str, device: str, ks: Sequence[int], data: Inputs) -> dict:
     out: dict = {}
     pt_rows = [row for row in data.dev if row.get("source") == "synthetic-pt"]
     for k in ks:
-        engine = Engine(scorer, EngineConfig(k={"skill": k, "connector": 15, "tool": k}))
+        engine = Engine(scorer, EngineConfig(k=dict.fromkeys(KINDS, k)))
         store: Scored = {}
         rankers = {h: laya_method(engine, i, store) for h, i in data.catalogs.items()}
+        negatives = [row["prompt"] for row in data.negatives]
         out[f"laya-{model}-k{k}"] = {
             "test": evaluate(data.test, data.known, rankers, data.canon),
             "dev": evaluate(data.dev, data.known, rankers, data.canon),
             "dev_pt": evaluate(pt_rows, data.known, rankers, data.canon),
+            "natural": evaluate(data.natural, data.known, rankers, data.canon),
             "silent_on_unlabeled": none_rate(data.negatives, rankers),
-            "calibration": {kind: calibrate(data.dev, kind, store, canon=data.canon) for kind in KINDS},
+            "calibration": {kind: calibrate(data.dev + data.natural, kind, store, canon=data.canon,
+                                            negatives=negatives) for kind in KINDS},
             "overflows": engine.overflows, "vram_mb": vram_mb()}
     return out
 
@@ -189,7 +204,8 @@ def extra_lines(sets: dict) -> list[str]:
         lines.append(f"Silent on unlabeled turns: {sets['silent_on_unlabeled']} · head overflows: "
                      f"{sets['overflows']} · VRAM MB: {sets['vram_mb']}")
     for kind, table in sets.get("calibration", {}).items():
-        cells = ", ".join(f"τ={row['tau']} P={row['precision']} R={row['recall']}" for row in table)
+        cells = ", ".join(f"τ={row['tau']} P={row['precision']} R={row['recall']} A={row.get('alarm', 0.0)}"
+                          for row in table)
         lines.append(f"Calibration {kind}: {cells} → pick τ={pick_tau(table)}")
     return lines + [""]
 
@@ -216,7 +232,7 @@ def render(results: dict, device: str) -> str:
     for method, sets in results.items():
         lines += [f"## {method}", "", "| split | kind | n | top1 | top3 | none_first | unknown | p50 ms | p95 ms |",
                   "|---|---|---|---|---|---|---|---|---|"]
-        for split in ("test", "dev", "dev_pt"):
+        for split in ("test", "dev", "dev_pt", "natural"):
             if split in sets:
                 lines += table_rows(split, sets[split])
         lines += extra_lines(sets)
@@ -231,13 +247,15 @@ def load_inputs(args: argparse.Namespace) -> Inputs:
     data_dir = Path(args.data)
     return Inputs(catalogs, known, canon, list(read_jsonl(data_dir / "transcripts.jsonl"))[:limit],
                   list(read_jsonl(Path(args.synthetic)))[:limit],
-                  list(read_jsonl(data_dir / "negatives.jsonl"))[: args.negatives])
+                  list(read_jsonl(data_dir / "negatives.jsonl"))[: args.negatives],
+                  list(read_jsonl(Path(args.natural)))[:limit])
 
 
 def parse(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="laya-router eval run")
     parser.add_argument("--data", default="eval/data")
     parser.add_argument("--synthetic", default="eval/synthetic.jsonl")
+    parser.add_argument("--natural", default="eval/natural.jsonl")
     parser.add_argument("--out", default="eval/results")
     parser.add_argument("--device", default="auto", help="auto | cuda | cpu")
     parser.add_argument("--models", nargs="+", default=["typed-decisions", "english"])
@@ -252,7 +270,8 @@ def main(argv: list[str] | None = None) -> int:
     data = load_inputs(args)
     bm25 = {h: bm25_method(items) for h, items in data.catalogs.items()}
     results = {"bm25": {"test": evaluate(data.test, data.known, bm25, data.canon),
-                        "dev": evaluate(data.dev, data.known, bm25, data.canon)}}
+                        "dev": evaluate(data.dev, data.known, bm25, data.canon),
+                        "natural": evaluate(data.natural, data.known, bm25, data.canon)}}
     for model in args.models:
         results.update(run_model(model, args.device, args.ks, data))
     report = render(results, args.device)
