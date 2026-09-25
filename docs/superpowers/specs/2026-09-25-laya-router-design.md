@@ -4,6 +4,7 @@
 - **Status:** Draft, awaiting review
 - **Source doc:** `DYNAMIC-ROUTING.md` (reviewed; corrections in §2)
 - **Approach:** A. A router MCP server with a plugin hook. Chosen over B (meta-tool broker) and C (shared daemon); both remain possible add-ons.
+- **Amended:** 2026-09-25, after the Phase 0 gate. §12 overrides the shortlist in §4 and the skill criterion in §7.
 
 ## 1. Intent
 
@@ -248,3 +249,19 @@ The spike is throwaway work. The data files it produces are kept.
    - whether `head_max_len` can widen the option budget;
    - VRAM per session.
 5. Whether Claude Code 2.1.282's stdio handshake bug (#97173) affects `mcp_tool` hooks.
+
+## 12. Amendment after the Phase 0 gate (2026-09-25)
+
+The gate failed as planned. The evidence is in `spike/FINDINGS.md` § Gate. The user chose the measured fix, keeping approach A.
+
+- **Shortlist (overrides §4, steps 1–2).** BM25 now indexes each item's short name, its connector and its description, and takes the top-K per kind. It replaces the encoder cosine.
+  - Mean-pooled Laya encoder vectors retrieve poorly: dev skill recall@10 is 0.51 for cosine against 0.92 for BM25. Laya's own docstring recommends a dedicated bi-encoder for shortlisting.
+  - Item embeddings, `emb-<model>.npz` and `Scorer.embed` are gone, and `warmup` no longer pre-embeds.
+  - K, the `none` option, τ and the caps are unchanged in kind. Their values come from the re-run eval.
+- **Model:** `typed-decisions`. `english` ranks `none` first on about 30% of the dev prompts that need a skill.
+- **Skill criterion (overrides §7, step 5).** Top-3 skill recall ≥ 0.70 is now measured on the synthetic dev set. Most real transcript skill labels are workflow continuations, such as a bare option number or "implement", which no prompt-only router can see. "Beats BM25" is reported on the same dev metric. On that metric the hybrid is +0.04, which is below the 0.10 bar, and the user accepted that. Laya's measured value over BM25 is:
+  - routing real prompts to connectors (+0.29 top-1);
+  - tool top-1 (+0.11 on dev);
+  - the `none` abstain.
+- **Latency:** GPU p95 measured 65–150 ms with the BM25 shortlist. CPU p95 is about 2.6 s.
+- **Known risk carried into Phase 1:** each session holds about 2.5 GB of VRAM. Approach C remains the fix if concurrent sessions exhaust the card.

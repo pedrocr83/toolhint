@@ -6,7 +6,7 @@
 
 **Architecture:** There are three layers.
 - **Catalog.** Reads files on disk to find routable items for the calling harness (Claude Code or Cowork).
-- **Engine.** Shortlists items by encoder cosine similarity, then runs one Laya `choice` per kind, with a `none` option so it can abstain.
+- **Engine.** Shortlists items with BM25 over each item's name, connector and description, then runs one Laya `choice` per kind, with a `none` option so it can abstain. The original design used encoder cosine similarity; the gate amendment in Task 12 replaced it.
 - **Server.** An MCP server that exposes a single `route` tool, loads the model in the background, and fails open.
 
 The plugin's hook uses `type: mcp_tool` to call `route`. Other harnesses reach the same server through a single MCP config entry.
@@ -38,7 +38,7 @@ The plugin's hook uses `type: mcp_tool` to call `route`. Other harnesses reach t
   - Catalog TTL: 30 s.
   - Environment overrides: `LAYA_ROUTER_MODEL`, `LAYA_ROUTER_DEVICE`, `LAYA_ROUTER_K_SKILL`, `LAYA_ROUTER_K_TOOL`, `LAYA_ROUTER_TAU`, `LAYA_ROUTER_LOG`.
 - Paths:
-  - caches in `~/.cache/laya-router/` (`emb-<model>.npz`, `mcp-tools.json`);
+  - caches in `~/.cache/laya-router/` (`mcp-tools.json`);
   - decision log at `~/.local/state/laya-router/decisions.jsonl`, rotated past 10 MB.
 - Plugin rules:
   - no top-level `bin/` (Cowork rejects it);
@@ -2483,6 +2483,82 @@ Expected: `eval/results/report-cpu.md` exists. Record p50/p95. Latency is inform
 
   If the user proceeds, set `DEFAULT_K` and `DEFAULT_TAU` in `engine.py` to the chosen values (`from_env` reads them, so it needs no change). Update the expected dicts in `tests/test_engine.py::test_config_from_env` to match, then run `uv run pytest` and commit `feat: set routing defaults from phase 0 calibration`.
 
+#### Gate amendment: user decision on 2026-09-25 (hybrid, approach A)
+
+The gate failed as planned; see `spike/FINDINGS.md` § Gate. The user chose the fix that was measured there:
+- A BM25 shortlist over each item's short name, connector and description replaces the encoder-cosine shortlist. Laya `typed-decisions` still makes the choice.
+- The embedding cache goes away.
+- The skill criterion is measured on the synthetic dev set. Most real skill labels are workflow continuations that no prompt-only router can see.
+
+Steps 5–10 run before Step 4's defaults commit.
+
+**Files (amendment):**
+- Create: `src/laya_router/bm25.py`, `tests/test_bm25.py`
+- Modify: `src/laya_router/engine.py`, `src/laya_router/scorer.py`, `src/laya_router/evaluate.py`, `tests/fakes.py`, `tests/test_engine.py`, `tests/test_evaluate.py`
+
+**Interfaces (amendment):**
+- Produces:
+  - `bm25.tokens(text) -> list[str]` and `bm25.BM25(docs, k1=1.5, b=0.75).scores(query) -> list[float]`, moved unchanged from `evaluate.py`;
+  - `engine.doc_text(item) -> str`, which returns `f"{short_key(item)} {item.connector or ''} {item.text}"` and is used by both the shortlist and the BM25 baseline;
+  - the `engine.Scorer` protocol, reduced to `.model` and `.choose(state, questions)`;
+  - `engine.Engine(scorer, cfg=None)`, which no longer takes a `cache` argument.
+- Removed: `EmbeddingCache`, `digest`, `cosine`, `Scorer.embed`, `LayaScorer.embed`, `evaluate.cosine_method`, `evaluate.CACHE_DIR` and `~/.cache/laya-router/emb-<model>.npz`.
+- Later tasks (their text below is already updated):
+  - Task 13 `default_engine` returns `Engine(scorer, EngineConfig.from_env(env))`.
+  - Task 14 `warmup` loads the model and prints catalog counts; it no longer pre-embeds.
+
+- [ ] **Step 5: Write the failing tests**
+  - `tests/test_bm25.py`: `test_tokens_split_on_non_alphanumerics`, `test_bm25_prefers_matching_doc` (moved from `test_evaluate.py`), and `test_bm25_scores_zero_without_overlap`.
+  - `tests/test_engine.py`:
+    - `test_shortlist_ranks_by_bm25_over_name_and_description`: for "turn this csv into an xlsx workbook", the K=2 criteria are `{"xlsx", "reports", "none"}`;
+    - `test_tool_shortlist_matches_connector_name`: for "anything new in my gmail inbox", the K=1 tool criteria are `{"search_threads", "none"}`;
+    - `test_scorer_needs_only_choose`: a scorer with only `.choose` works;
+    - `test_edited_item_text_refreshes_shortlist`: a characterization test, because the old digest-keyed cache already had this property.
+  - `tests/test_evaluate.py`:
+    - `test_bm25_baseline_indexes_item_names`;
+    - `test_gate_lines_rate_best_laya_on_dev_skills`, which replaces `test_gate_lines_compare_best_laya_with_bm25`. The best method is picked by dev skill top-3, and the lines check dev skill top-3 ≥ 0.70, beating BM25 on dev skill top-3 by ≥ 0.10, and GPU p95 ≤ 250 ms.
+
+- [ ] **Step 6: Run and confirm they fail**
+
+Run: `uv run pytest -q`
+Expected:
+- `test_bm25.py` fails with `ModuleNotFoundError: No module named 'laya_router.bm25'`.
+- The shortlist, connector-name and baseline-name tests fail on the wrong items.
+- `test_scorer_needs_only_choose` fails with an `AttributeError` for `embed`.
+- The gate test fails with `KeyError: 'kinds'`.
+
+- [ ] **Step 7: Implement**
+  - `bm25.py` holds `TOKEN`, `tokens` and `BM25`, moved from `evaluate.py`.
+  - `engine.py`:
+    - add `doc_text`;
+    - an `lru_cache(maxsize=16)` builds the BM25 index for a `tuple` of pool items; the items are frozen and hashable, so an edited description keys a fresh index;
+    - `Engine._shortlist(text, pool, k)` returns the whole pool when `len(pool) <= k`, otherwise the top-k by BM25 score using a stable argsort;
+    - `Engine.scores` no longer embeds;
+    - delete the embedding code.
+  - `scorer.py`: `LayaScorer` keeps `preload` and `choose`, and drops `embed_fn_from_agent`.
+  - `evaluate.py`:
+    - `bm25_method` indexes `doc_text`;
+    - `run_model` builds `Engine(scorer, EngineConfig(k=...))` for each K;
+    - `gate_lines` is re-based on dev;
+    - delete the cosine method and the embedding cache.
+  - `tests/fakes.py`: drop `embed` and `VOCAB`.
+  - `tests/test_engine.py`: drop the three `EmbeddingCache` tests, and assert on `choose_calls` wherever `embed_calls` was used.
+
+- [ ] **Step 8: Run the suite**
+
+Run: `uv run pytest -q` and then `uv run pytest -m slow -q`
+Expected: all pass, and the slow test passes (1).
+
+- [ ] **Step 9: Commit** `feat: shortlist with BM25 instead of encoder cosine`
+
+- [ ] **Step 10: Re-run the GPU eval and record it**
+
+Run: `uv run python -m laya_router.evaluate --device cuda`
+Expected: `report-cuda.md` ends with the re-based gate lines.
+Then:
+- Add a "Re-run" block to `spike/FINDINGS.md` § Gate and a line to `tasks/todo.md` § Review.
+- Do Step 4's defaults commit with the calibrated τ (typed-decisions, K=10).
+
 ---
 
 ## Phase 1: build (only after the user passes the gate)
@@ -2495,7 +2571,7 @@ Expected: `eval/results/report-cpu.md` exists. Record p50/p95. Latency is inform
 **Interfaces:**
 - Consumes:
   - `catalog.discover`;
-  - `engine.Engine`, `EngineConfig`, `EmbeddingCache`, `format_hint`;
+  - `engine.Engine`, `EngineConfig`, `format_hint`;
   - `scorer.LayaScorer` (lazy);
   - `items.RouteContext`, `Ranking`;
   - `mcp.server.mcpserver.MCPServer(name, instructions=, version=, lifespan=)`, `@server.tool(name=, description=)`, `server.run()`. These are verified in mcp 2.2.0, where `stdio_server` points fd 1 at stderr while serving, before the lifespan runs.
@@ -2656,11 +2732,10 @@ from mcp.server.mcpserver import MCPServer
 
 from . import __version__, catalog
 from .decisions import DEFAULT_LOG, DecisionLog
-from .engine import EmbeddingCache, Engine, EngineConfig, format_hint
+from .engine import Engine, EngineConfig, format_hint
 from .items import Item, RouteContext
 
 log = logging.getLogger("laya_router.server")
-CACHE_DIR = Path.home() / ".cache" / "laya-router"
 INSTRUCTIONS = ("If a user request arrives without a [laya-router] line in context, you may call `route` "
                 "with the request text to get ranked skill/connector/tool candidates. Treat them as advisory.")
 ROUTE_DESCRIPTION = ("Rank the skills, connectors and tools most relevant to a user request. "
@@ -2728,7 +2803,7 @@ def default_engine(env: Mapping[str, str] = os.environ) -> Engine:
 
     model = env.get("LAYA_ROUTER_MODEL", "typed-decisions")
     scorer = LayaScorer(model=model, device=env.get("LAYA_ROUTER_DEVICE") or None)
-    return Engine(scorer, EngineConfig.from_env(env), EmbeddingCache(CACHE_DIR / f"emb-{model}.npz"))
+    return Engine(scorer, EngineConfig.from_env(env))
 
 
 def decision_log(env: Mapping[str, str] = os.environ) -> DecisionLog:
@@ -2847,7 +2922,7 @@ def build_parser() -> argparse.ArgumentParser:
     cat.add_argument("--refresh", action="store_true")
     cat.add_argument("--transcript-path", default="")
     cat.set_defaults(func=cmd_catalog)
-    sub.add_parser("warmup", help="download the model, refresh tools, pre-embed catalogs").set_defaults(func=cmd_warmup)
+    sub.add_parser("warmup", help="download the model, refresh tools, count catalogs").set_defaults(func=cmd_warmup)
     ev = sub.add_parser("eval", help="build the eval set or run the Phase 0 comparison")
     ev.add_argument("action", choices=["build", "run"])
     ev.add_argument("rest", nargs=argparse.REMAINDER)
@@ -2886,8 +2961,7 @@ def cmd_warmup(_args: argparse.Namespace) -> int:
     catalog.clear_cache()
     engine = server.default_engine()
     for harness, items in catalog.harness_catalogs().items():
-        engine.cache.vectors(items, engine.scorer.embed)
-        print(f"{harness}: {len(items)} items embedded with {engine.scorer.model}")
+        print(f"{harness}: {len(items)} items ready for {engine.scorer.model}")
     return 0
 
 
@@ -3011,7 +3085,7 @@ Advisory only: it never hides or blocks anything. Design: `docs/superpowers/spec
 ## Install (this machine)
 ```bash
 uv tool install -e .          # puts `laya-router` in ~/.local/bin
-laya-router warmup            # downloads the checkpoint, snapshots MCP tools, pre-embeds catalogs
+laya-router warmup            # downloads the checkpoint, snapshots MCP tools, counts catalogs
 claude plugin marketplace add "$PWD"
 claude plugin install laya-router@layla
 ```
@@ -3051,7 +3125,7 @@ laya-router warmup
 claude plugin marketplace add "$PWD"
 claude plugin install laya-router@layla
 ```
-Expected: warmup prints the embedded counts for each harness, and the install reports success.
+Expected: warmup prints the item counts for each harness, and the install reports success.
 
 - [ ] **Step 7: Verify in the Claude Code CLI**
 
