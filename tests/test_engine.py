@@ -52,6 +52,14 @@ def test_tool_shortlist_matches_connector_name():
     assert set(scorer.choose_calls[0][1]["tool"]["criteria"]) == {"search_threads", NONE_ID}
 
 
+def test_equivalent_duplicates_become_one_option():
+    pool = [Item("skill", "anthropic-skills:pptx", "Make slide decks", "slide decks"),
+            Item("skill", "document-skills:pptx", "Make slide decks", "slide decks"), skill("notes", "take meeting notes")]
+    scorer = FakeScorer()
+    Engine(scorer).scores("make a slide deck", pool)
+    assert set(scorer.choose_calls[0][1]["skill"]["criteria"]) == {"pptx", "notes", NONE_ID}
+
+
 class ChooseOnly:
     model = "choose-only"
 
@@ -129,7 +137,7 @@ def test_head_budget_overflow_halves_shortlists():
 
 
 def test_config_from_env():
-    cfg = EngineConfig.from_env({"LAYA_ROUTER_K_SKILL": "7", "LAYA_ROUTER_TAU": "0.5"})
-    assert cfg.k == {"skill": 7, "connector": 15, "tool": 5}
-    assert cfg.tau == {"skill": 0.5, "connector": 0.5, "tool": 0.5}
-    assert EngineConfig().tau == {"skill": 0.2, "connector": 0.2, "tool": 0.5}
+    cfg = EngineConfig.from_env({"LAYA_ROUTER_K_SKILL": "7", "LAYA_ROUTER_TAU": "0.6"})
+    assert cfg.k == {"skill": 7, "connector": 5, "tool": 5}
+    assert cfg.tau == {"skill": 0.6, "connector": 0.6, "tool": 0.6}
+    assert EngineConfig().tau == {"skill": 0.5, "connector": 0.5, "tool": 0.5}

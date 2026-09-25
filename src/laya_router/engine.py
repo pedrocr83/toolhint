@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Protocol
@@ -23,8 +23,8 @@ QUESTIONS = {
     "tool": "Which tool should be called first for this request?",
 }
 PLURAL = {"skill": "skills", "connector": "connectors", "tool": "tools"}
-DEFAULT_K = {"skill": 5, "connector": 15, "tool": 5}  # phase 0 re-run: best dev skill top-1/top-3, ≤10 options stay calibrated
-DEFAULT_TAU = {"skill": 0.2, "connector": 0.2, "tool": 0.5}  # smallest τ with dev precision ≥ 0.75 at K=5
+DEFAULT_K = {"skill": 5, "connector": 5, "tool": 5}  # 6 options with none: inside Laya's calibrated buckets
+DEFAULT_TAU = {"skill": 0.5, "connector": 0.5, "tool": 0.5}  # precision ≥ 0.75 with ≤ 10% hints on unrelated turns
 DEFAULT_CAP = {"skill": 3, "connector": 2, "tool": 3}
 Scores = dict[str, list[tuple[str, float]]]
 
@@ -67,6 +67,18 @@ def short_key(item: Item) -> str:
 def doc_text(item: Item) -> str:
     """What BM25 indexes for an item: short name, connector and description."""
     return f"{short_key(item)} {item.connector or ''} {item.text}"
+
+
+def distinct(items: Iterable[Item]) -> list[Item]:
+    """First item per (short key, label): one skill shipped by two plugins would split Laya's probability."""
+    seen: set[tuple[str, str]] = set()
+    out: list[Item] = []
+    for item in items:
+        key = (short_key(item), item.label)
+        if key not in seen:
+            seen.add(key)
+            out.append(item)
+    return out
 
 
 @lru_cache(maxsize=16)
@@ -126,7 +138,7 @@ class Engine:
     def scores(self, prompt: str, items: Sequence[Item]) -> Scores:
         """Per kind: (item id or NONE_ID, probability), best first. No thresholds, no skipping."""
         text = prompt.strip()[:MAX_PROMPT_CHARS]
-        pools = {kind: [item for item in items if item.kind == kind] for kind in KINDS}
+        pools = {kind: distinct(item for item in items if item.kind == kind) for kind in KINDS}
         pools = {kind: pool for kind, pool in pools.items() if pool}
         if not pools:
             return {}
