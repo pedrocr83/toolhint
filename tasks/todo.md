@@ -11,7 +11,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 6. Tool cache refresh (local stdio MCP servers)
 - [x] 7. Engine: shortlist, choice + none, thresholds, caches
 - [x] 8. Hint format + Laya scorer
-- [ ] 9. Eval dataset from transcripts
+- [x] 9. Eval dataset from transcripts
 - [ ] 10. Synthetic dev prompts (+ Portuguese)
 - [ ] 11. Eval runner: BM25 vs cosine vs Laya, calibration, gate lines
 - [ ] 12. GATE: user go/no-go

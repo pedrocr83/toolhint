@@ -154,13 +154,17 @@ def connector_items(name: str, instructions: str, tools: list, tool_prefix: str,
 
 
 def claude_ai_items(session: dict, cc_names: bool) -> list[Item]:
-    """claude.ai connectors from a Cowork session JSON; Claude Code tool ids when cc_names."""
+    """claude.ai connectors from a Cowork session JSON; Claude Code tool ids when cc_names,
+    otherwise Cowork's own mcp__<connector uuid>__<tool> ids."""
     items: list[Item] = []
     for server in session.get("remoteMcpServersConfig") or []:
         if not isinstance(server, dict) or not server.get("name"):
             continue
-        name = str(server["name"])
-        prefix = f"mcp__claude_ai_{name.replace(' ', '_')}__" if cc_names else ""
+        name, uuid = str(server["name"]), server.get("uuid")
+        if cc_names:
+            prefix = f"mcp__claude_ai_{name.replace(' ', '_')}__"
+        else:
+            prefix = f"mcp__{uuid}__" if uuid else ""
         items += connector_items(name, str(server.get("instructions") or ""), server.get("tools") or [], prefix, "claude.ai")
     return items
 

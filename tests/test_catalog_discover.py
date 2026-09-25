@@ -74,3 +74,10 @@ def test_harness_catalogs_include_cowork_when_present(tmp_path, write_skill):
     catalogs = harness_catalogs(tmp_path)
     assert set(catalogs) == {"claude-code", "cowork"}
     assert {i.id for i in catalogs["cowork"]} == {"Gmail", "search_threads"}
+
+
+def test_claude_ai_items_use_cowork_uuid_tool_ids():
+    session = {"remoteMcpServersConfig": [{"name": "Gmail", "uuid": "7729dcbf", "tools": [
+        {"name": "search_threads", "description": "Search threads."}]}]}
+    connector, tool = claude_ai_items(session, cc_names=False)
+    assert (connector.id, tool.id, tool.connector) == ("Gmail", "mcp__7729dcbf__search_threads", "Gmail")
