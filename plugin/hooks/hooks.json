@@ -1,0 +1,4 @@
+{"hooks": {"UserPromptSubmit": [{"hooks": [{"type": "mcp_tool", "server": "plugin:laya-router:router", "tool": "route",
+  "input": {"prompt": "${prompt}", "cwd": "${cwd}", "transcript_path": "${transcript_path}", "session_id": "${session_id}",
+            "format": "hook"},
+  "timeout": 5}]}]}}

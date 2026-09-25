@@ -1,0 +1,2 @@
+{"name": "layla", "owner": {"name": "local"},
+ "plugins": [{"name": "laya-router", "source": "./plugin", "description": "Local Laya routing hints for skills, connectors and tools"}]}
