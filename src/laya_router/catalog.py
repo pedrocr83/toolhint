@@ -9,11 +9,13 @@ import json
 import logging
 import re
 import time
+from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
 
 import yaml
 
+from .bm25 import fold
 from .items import Item, Kind, RouteContext
 
 log = logging.getLogger("laya_router.catalog")
@@ -142,11 +144,27 @@ TTL_S = 30.0
 _CACHE: dict[tuple[str, ...], tuple[float, list[Item]]] = {}
 
 
+TOOL_VERBS = frozenset({"get", "list", "create", "update", "delete", "set", "add", "remove", "fetch", "read",
+                        "write", "tool", "by", "for", "the", "to", "of", "and", "or", "with",
+                        "from", "in", "on", "all", "new", "me", "id"})
+
+
+def tool_keywords(name: str, tools: list[dict], limit: int = 6) -> list[str]:
+    """Most frequent words in a connector's tool names, minus CRUD verbs and the connector's own name."""
+    own = set(re.findall(r"[a-z0-9]+", fold(name)))
+    counts = Counter(word for tool in tools for word in dict.fromkeys(re.findall(r"[a-z0-9]+", fold(str(tool["name"]))))
+                     if word not in TOOL_VERBS and word not in own)
+    return [word for word, _ in counts.most_common(limit)]
+
+
 def connector_items(name: str, instructions: str, tools: list, tool_prefix: str, source: str) -> list[Item]:
-    """One connector item plus one tool item per tool; tool ids are tool_prefix + tool name."""
+    """One connector item plus one tool item per tool; tool ids are tool_prefix + tool name. Without server
+    instructions the label names what the tools do, since a raw tool list tells Laya little."""
     tool_list = [tool for tool in tools if isinstance(tool, dict) and tool.get("name")]
     names = ", ".join(tool["name"] for tool in tool_list)
-    items = [make_item("connector", name, f"{instructions.strip()} {name} tools: {names}".strip(), source)]
+    keywords = tool_keywords(name, tool_list)
+    summary = instructions.strip() or (f"{name}: {', '.join(keywords)}." if keywords else "")
+    items = [make_item("connector", name, f"{summary} {name} tools: {names}".strip(), source)]
     for tool in tool_list:
         description = str(tool.get("description") or tool["name"])
         items.append(make_item("tool", tool_prefix + tool["name"], f"{name} {tool['name']}: {description}", source, name))

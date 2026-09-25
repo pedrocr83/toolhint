@@ -1,7 +1,7 @@
 import json
 
 from laya_router.catalog import (
-    claude_ai_items, connector_of, discover, harness_catalogs, local_server_items, session_json_for,
+    claude_ai_items, connector_items, connector_of, discover, harness_catalogs, local_server_items, session_json_for,
 )
 from laya_router.items import RouteContext
 
@@ -81,3 +81,15 @@ def test_claude_ai_items_use_cowork_uuid_tool_ids():
         {"name": "search_threads", "description": "Search threads."}]}]}
     connector, tool = claude_ai_items(session, cc_names=False)
     assert (connector.id, tool.id, tool.connector) == ("Gmail", "mcp__7729dcbf__search_threads", "Gmail")
+
+
+def test_connector_label_names_what_its_tools_do():
+    tools = [{"name": "search_threads"}, {"name": "get_thread"}, {"name": "create_draft"}, {"name": "send_message"}]
+    connector = connector_items("Gmail", "", tools, "mcp__x__", "claude.ai")[0]
+    assert connector.label == "Gmail: search, threads, thread, draft, send, message."
+    assert "search_threads" in connector.text
+
+
+def test_connector_label_prefers_server_instructions():
+    connector = connector_items("Docs", "Search the product documentation.", [{"name": "query"}], "mcp__d__", "mcp:d")[0]
+    assert connector.label == "Search the product documentation."
