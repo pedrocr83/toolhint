@@ -88,6 +88,13 @@ def test_load_warms_the_model_before_the_first_prompt():
     assert len(scorer.choose_calls) == 1
 
 
+def test_an_unwritable_decision_log_keeps_the_hint(tmp_path):
+    svc = RouterService(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})), discover=lambda ctx: ITEMS,
+                        decisions=DecisionLog(tmp_path))  # a directory, so every append fails
+    svc.load()
+    assert svc.route(RouteContext("please debug the failing test")) == HINT
+
+
 def test_decision_log_rotates_and_can_be_disabled(tmp_path):
     path = tmp_path / "d.jsonl"
     log = DecisionLog(path, max_bytes=10)

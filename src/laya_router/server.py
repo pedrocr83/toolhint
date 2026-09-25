@@ -60,11 +60,15 @@ class RouterService:
         try:
             items = self._discover(ctx)
             ranking = engine.rank(ctx.prompt, items)
-            self._decisions.write(ctx, ranking, len(items))
-            return format_hint(ranking)
+            hint = format_hint(ranking)
         except Exception:
             log.exception("route failed")
             return ""
+        try:
+            self._decisions.write(ctx, ranking, len(items))
+        except Exception:
+            log.exception("decision log write failed; the hint still goes out")
+        return hint
 
 
 def hook_output(hint: str) -> str:
