@@ -270,7 +270,7 @@ The gate failed as planned. The evidence is in `spike/FINDINGS.md` § Gate. The 
   - Equivalent items (same short key and label) become one option.
   - A connector without server instructions is labelled by its most frequent tool-name words.
   - The eval adds `eval/natural.jsonl` (scenario prompts that avoid the descriptions' wording).
-  - τ is calibrated against the alarm rate on real unlabeled turns: precision must be ≥ 0.75, with a hint on no more than 10% of turns that used no skill or tool.
+  - τ is calibrated against the alarm rate on real unlabeled turns: precision must be ≥ 0.75, with a hint of that kind on no more than 10% of turns that used no skill or tool. Across all kinds, the defaults put some hint on about 16% of such turns.
   - Defaults are K=5 for every kind (6 options, inside Laya's calibrated buckets) and τ of 0.5 for skills, 0.6 for connectors and 0.5 for tools.
   - Details are in `spike/FINDINGS.md` § Routing quality.
 - **Tool snapshot scope (final review, overrides §5).** `catalog --refresh` and `warmup` leave out a project's `.mcp.json`. Claude Code runs those servers only after the user approves them, and a global snapshot would also carry one project's servers into every other project.

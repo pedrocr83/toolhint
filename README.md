@@ -14,7 +14,7 @@ claude plugin install laya-router@layla
 - **Gemini, Cursor, VS Code:** merge the matching file from `snippets/`.
 
 ## What to expect
-The router is conservative. On prompts that need a skill or connector, it adds a hint about a third of the time, and those hints are right about 9 times in 10. It adds a hint to 5–8.5% of other turns. Each session loads the model, which takes about 2.4 GB of VRAM; routing takes about 50 ms on a GPU and about 2 s on a CPU. The measurements are in `spike/FINDINGS.md`.
+The router is conservative. On prompts that need a skill or connector, it adds a hint about a third of the time, and those hints are right about 9 times in 10. On other turns it adds a hint about 16% of the time; each kind fires on 5–8% of them, and tool hints are the most common. Each session loads the model, which takes about 2.4 GB of VRAM; routing takes about 50 ms on a GPU and about 2 s on a CPU. The measurements are in `spike/FINDINGS.md`.
 
 ## Check it
 - **Try a prompt:** `laya-router route "your prompt"` prints the hint plus the ranking JSON.

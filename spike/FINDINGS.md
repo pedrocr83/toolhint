@@ -183,7 +183,7 @@ K=5 beats K=10 on dev skill top-1 and top-3, and it holds precision 0.78 at a hi
 
 **Result** (typed-decisions, K=5 for every kind, GPU p95 40–53 ms):
 
-| kind | τ | precision | recall | hint on unrelated real turns |
+| kind | τ | precision | recall | hint of this kind on unrelated real turns |
 |---|---|---|---|---|
 | skill | 0.5 | 0.93 | 0.36 | 8.5% |
 | connector | 0.6 | 1.0 | 0.36 | 5% |
@@ -193,7 +193,9 @@ K=5 beats K=10 on dev skill top-1 and top-3, and it holds precision 0.78 at a hi
 - Real connector top-1 is 0.40 (it was 0.22 before the label fix).
 - All three smoke prompts (pytest, supplier follow-up, 6-slide deck) now return no hint. That means no false connector, and it also shows how conservative the router is.
 
-**Profile:** the router speaks on about a third of the prompts that need a skill or connector. When it speaks it is right about 9 times in 10, and it stays quiet on more than 90% of other turns.
+**Any hint at all:** at these defaults, 16.1% of the 298 real unlabeled turns that would be routed get some hint (skill 5.7%, connector 5.0%, tool 7.7%). That is 14.9% of all 323 turns; 25 are skipped as short or slash commands. The per-kind rates above do not add up to a per-turn rate, and an earlier version of this section said "quiet on more than 90% of other turns", which overstated how quiet it is.
+
+**Profile:** the router speaks on about a third of the prompts that need a skill or connector. When it speaks it is right about 9 times in 10, and it stays quiet on about 84% of other turns.
 
 **Known gaps, deferred:**
 - Prompts with no lexical overlap: the pytest prompt's skill shortlist still misses `systematic-debugging`.
