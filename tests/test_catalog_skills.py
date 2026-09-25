@@ -17,6 +17,7 @@ def test_scan_skills_reads_name_and_description(tmp_path, write_skill):
 def test_scan_skills_skips_malformed_and_disabled(tmp_path, write_skill):
     write_skill(tmp_path, "bad-yaml", "---\nname: [unclosed\ndescription: x\n---\n")
     write_skill(tmp_path, "no-desc", "---\nname: no-desc\n---\n")
+    write_skill(tmp_path, "bad-date", "---\nname: bad-date\ndescription: x\ncreated: 2024-02-30\n---\n")
     write_skill(tmp_path, "no-frontmatter", "# just a heading\n")
     write_skill(tmp_path, "hidden", "---\nname: hidden\ndescription: secret\ndisable-model-invocation: true\n---\n")
     (tmp_path / "binary").mkdir()

@@ -59,7 +59,7 @@ def read_frontmatter(path: Path) -> dict:
         return {}
     try:
         data = yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
+    except (yaml.YAMLError, ValueError, TypeError, RecursionError):  # bad dates and tags raise ValueError
         log.warning("unparseable frontmatter in %s", path)
         return {}
     return data if isinstance(data, dict) else {}
