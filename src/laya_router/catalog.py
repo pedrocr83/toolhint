@@ -8,11 +8,13 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 import yaml
 
-from .items import Item, Kind
+from .items import Item, Kind, RouteContext
 
 log = logging.getLogger("laya_router.catalog")
 LABEL_CHARS = 80
@@ -133,3 +135,129 @@ def cowork_skills(home: Path, session: dict) -> list[Item]:
         name = load_json(root / ".claude-plugin" / "plugin.json").get("name") or root.name
         items += scan_skills(root / "skills", name, f"cowork-plugin:{name}")
     return items
+
+
+TOOL_CACHE = Path(".cache") / "laya-router" / "mcp-tools.json"
+TTL_S = 30.0
+_CACHE: dict[tuple[str, ...], tuple[float, list[Item]]] = {}
+
+
+def connector_items(name: str, instructions: str, tools: list, tool_prefix: str, source: str) -> list[Item]:
+    """One connector item plus one tool item per tool; tool ids are tool_prefix + tool name."""
+    tool_list = [tool for tool in tools if isinstance(tool, dict) and tool.get("name")]
+    names = ", ".join(tool["name"] for tool in tool_list)
+    items = [make_item("connector", name, f"{instructions.strip()} {name} tools: {names}".strip(), source)]
+    for tool in tool_list:
+        description = str(tool.get("description") or tool["name"])
+        items.append(make_item("tool", tool_prefix + tool["name"], f"{name} {tool['name']}: {description}", source, name))
+    return items
+
+
+def claude_ai_items(session: dict, cc_names: bool) -> list[Item]:
+    """claude.ai connectors from a Cowork session JSON; Claude Code tool ids when cc_names."""
+    items: list[Item] = []
+    for server in session.get("remoteMcpServersConfig") or []:
+        if not isinstance(server, dict) or not server.get("name"):
+            continue
+        name = str(server["name"])
+        prefix = f"mcp__claude_ai_{name.replace(' ', '_')}__" if cc_names else ""
+        items += connector_items(name, str(server.get("instructions") or ""), server.get("tools") or [], prefix, "claude.ai")
+    return items
+
+
+def local_server_items(home: Path) -> list[Item]:
+    """Local MCP servers snapshotted by `laya-router catalog --refresh`."""
+    items: list[Item] = []
+    for server in load_json(home / TOOL_CACHE).get("servers") or []:
+        if not isinstance(server, dict) or not server.get("name"):
+            continue
+        name, plugin = str(server["name"]), server.get("plugin")
+        prefix = f"mcp__plugin_{plugin}_{name}__" if plugin else f"mcp__{name}__"
+        items += connector_items(name, str(server.get("instructions") or ""), server.get("tools") or [], prefix, f"mcp:{name}")
+    return items
+
+
+def connector_of(tool_id: str) -> str | None:
+    """Connector name, as this catalog names it, for an mcp__<server>__<tool> id."""
+    parts = tool_id.split("__")
+    if len(parts) < 3 or parts[0] != "mcp":
+        return None
+    server = parts[1]
+    if server.startswith("claude_ai_"):
+        return server.removeprefix("claude_ai_").replace("_", " ")
+    if server.startswith("plugin_"):
+        return server.removeprefix("plugin_").partition("_")[2] or None
+    return server
+
+
+def session_json_for(transcript_path: str) -> Path | None:
+    """Cowork session JSON beside the local_<id>/ dir that holds this transcript."""
+    for parent in Path(transcript_path).parents:
+        if parent.name.startswith("local_"):
+            return parent.with_name(parent.name + ".json")
+    return None
+
+
+def newest_session_json(home: Path) -> Path | None:
+    """Most recently modified Cowork session JSON, if any."""
+    try:
+        sessions = list((home / COWORK_ROOT).glob("*/*/local_*.json"))
+        return max(sessions, key=lambda path: path.stat().st_mtime) if sessions else None
+    except OSError:
+        return None
+
+
+def discover(ctx: RouteContext, home: Path | None = None, now: float | None = None) -> list[Item]:
+    """Routable items for ctx's harness; rescans at most every TTL_S seconds."""
+    home = home or Path.home()
+    now = time.monotonic() if now is None else now
+    key = (str(home), ctx.harness, ctx.cwd, ctx.transcript_path if ctx.harness == "cowork" else "")
+    hit = _CACHE.get(key)
+    if hit and now - hit[0] < TTL_S:
+        return hit[1]
+    items = dedupe(_collect(ctx, home))
+    _CACHE[key] = (now, items)
+    return items
+
+
+def clear_cache() -> None:
+    _CACHE.clear()
+
+
+def _collect(ctx: RouteContext, home: Path) -> list[Item]:
+    if ctx.harness == "cowork":
+        session = load_json(session_json_for(ctx.transcript_path))
+        return _safe(cowork_skills, home, session) + _safe(claude_ai_items, session, False)
+    cwd = Path(ctx.cwd) if ctx.cwd else None
+    session = load_json(newest_session_json(home))
+    return (_safe(claude_code_skills, home, cwd) + _safe(local_server_items, home)
+            + _safe(claude_ai_items, session, True))
+
+
+def _safe(fn: Callable[..., list[Item]], *args: object) -> list[Item]:
+    try:
+        return fn(*args)
+    except Exception:  # one broken source must never break routing
+        log.exception("catalog source %s failed", fn.__name__)
+        return []
+
+
+def dedupe(items: list[Item]) -> list[Item]:
+    seen: set[tuple[str, str]] = set()
+    unique: list[Item] = []
+    for item in items:
+        if (item.kind, item.id) not in seen:
+            seen.add((item.kind, item.id))
+            unique.append(item)
+    return unique
+
+
+def harness_catalogs(home: Path | None = None) -> dict[str, list[Item]]:
+    """Claude Code catalog plus, when Cowork exists, the newest Cowork session's catalog."""
+    home = home or Path.home()
+    catalogs = {"claude-code": discover(RouteContext(""), home=home)}
+    newest = newest_session_json(home)
+    if newest:
+        transcript = newest.with_suffix("") / ".claude" / "projects" / "eval" / "eval.jsonl"
+        catalogs["cowork"] = discover(RouteContext("", transcript_path=str(transcript)), home=home)
+    return catalogs

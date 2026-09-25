@@ -22,3 +22,11 @@ def write_skill() -> Callable[..., Path]:
         return path
 
     return write
+
+
+@pytest.fixture(autouse=True)
+def _fresh_catalog_cache():
+    from laya_router import catalog
+
+    catalog.clear_cache()
+    yield
