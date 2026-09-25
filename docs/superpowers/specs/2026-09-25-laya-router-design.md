@@ -265,3 +265,11 @@ The gate failed as planned. The evidence is in `spike/FINDINGS.md` § Gate. The 
   - the `none` abstain.
 - **Latency:** GPU p95 measured 65–150 ms with the BM25 shortlist. CPU p95 is about 2.6 s.
 - **Known risk carried into Phase 1:** each session holds about 2.5 GB of VRAM. Approach C remains the fix if concurrent sessions exhaust the card.
+- **Routing-quality amendment (Task 14 smoke test).**
+  - The BM25 tokenizer folds accents, drops English and Portuguese stopwords, and splits words longer than 4 characters into 4-grams.
+  - Equivalent items (same short key and label) become one option.
+  - A connector without server instructions is labelled by its most frequent tool-name words.
+  - The eval adds `eval/natural.jsonl` (scenario prompts that avoid the descriptions' wording).
+  - τ is calibrated against the alarm rate on real unlabeled turns: precision must be ≥ 0.75, with a hint on no more than 10% of turns that used no skill or tool.
+  - Defaults are K=5 for every kind (6 options, inside Laya's calibrated buckets) and τ of 0.5 for skills, 0.6 for connectors and 0.5 for tools.
+  - Details are in `spike/FINDINGS.md` § Routing quality.

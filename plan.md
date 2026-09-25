@@ -2994,6 +2994,23 @@ git commit -m "feat: add laya-router CLI (serve, route, catalog, warmup, eval)
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
 
+#### Routing-quality amendment (found by Step 5, 2026-09-25)
+
+Step 5's prompt surfaced the wrong items: `change-report`, `chrome-devtools-mcp:troubleshooting` and connector `playwright` at 0.93. Systematic debugging found six root causes. They are recorded in `spike/FINDINGS.md` § Routing quality. Each fix was TDD'd and committed on its own:
+
+1. **`eval/natural.jsonl`** holds 96 scenario prompts (10 in Portuguese). The synthetic dev set borrows the description wording, and that hid the misses.
+2. **`bm25.tokens`** folds accents, drops English and Portuguese stopwords, and splits words longer than 4 characters into 4-grams.
+   - Tests: `test_tokens_fold_accents_drop_stopwords_and_split_long_words`, `test_bm25_matches_across_word_forms`, `test_content_words_survive_the_stopword_filter`.
+3. **`evaluate.calibrate`** also reports the alarm rate on real unlabeled turns, and **`pick_tau(min_precision=0.75, max_alarm=0.10)`** uses it. The eval adds a `natural` split and calibrates on dev plus natural. Connectors follow K like the other kinds.
+   - Tests: `test_calibrate_reports_alarm_rate_on_unlabeled_turns`, `test_pick_tau_keeps_false_alarms_under_the_cap`.
+4. **`engine.distinct`** merges equivalent items (same short key and label) into one option.
+   - Test: `test_equivalent_duplicates_become_one_option`.
+5. **`catalog.tool_keywords`** labels a connector that has no server instructions by its most frequent tool-name words.
+   - Tests: `test_connector_label_names_what_its_tools_do`, `test_connector_label_prefers_server_instructions`.
+6. **Defaults** are K=5 for every kind, and τ is 0.5 for skills, 0.6 for connectors and 0.5 for tools. They come from the alarm-aware re-run.
+
+Step 5 now prints `(no hint)` for the smoke prompt, which is an allowed outcome.
+
 ### Task 15: Plugin, marketplace, snippets, README, and live verification
 
 **Files:**

@@ -18,7 +18,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 
 ## Phase 1 — build (only after gate passes)
 - [x] 13. Decision log + MCP server
-- [ ] 14. CLI
+- [x] 14. CLI (+ routing-quality fixes from its smoke test)
 - [ ] 15. Plugin, marketplace, snippets, README, live verification (CLI, VS Code, Cowork)
 
 ## Review
@@ -50,3 +50,17 @@ Details are in `spike/FINDINGS.md` § Gate.
   - The defaults are K 5/15/5 and τ 0.2/0.2/0.5.
   - Details are in `spike/FINDINGS.md` § Re-run.
 
+### Routing quality (Task 14 smoke test)
+- The smoke prompt exposed six root causes:
+  1. tokenizer morphology and stopwords;
+  2. τ calibrated without false alarms;
+  3. 14-option connector choices in the sharpened temperature bucket;
+  4. duplicate skills splitting the probability;
+  5. connector labels that were raw tool lists;
+  6. a dev set written in the descriptions' own wording.
+- Each cause is fixed and has a test.
+- The profile now:
+  - The router speaks on about a third of the prompts that need a skill or connector, with precision 0.85–1.0.
+  - It adds a hint to 5–8.5% of real turns that used no skill or tool.
+  - GPU p95 is 40–53 ms.
+- Details are in `spike/FINDINGS.md` § Routing quality.

@@ -154,3 +154,48 @@ typed-decisions, BM25 over name, connector and description, on GPU:
 - τ is 0.2 for skills, 0.2 for connectors and 0.5 for tools.
 
 K=5 beats K=10 on dev skill top-1 and top-3, and it holds precision 0.78 at a higher recall. It also keeps each choice at 6 options or fewer, inside Laya's calibrated temperature buckets. The cost is that gold outside the BM25 top-5 is unreachable (dev recall@5 is 0.89).
+
+## Routing quality (Task 14 smoke test)
+
+**Symptom.** `laya-router route "my pytest suite fails with a KeyError after the refactor, help me find why"` returned `change-report` 0.43, `chrome-devtools-mcp:troubleshooting` 0.32 and connector `playwright` 0.93.
+
+**Root causes, found with systematic debugging:**
+1. **The synthetic dev set hid shortlist misses on real phrasing.** It was written from the item descriptions. `eval/natural.jsonl` adds 96 scenario prompts (10 in Portuguese) that avoid the descriptions' wording.
+2. **The BM25 tokenizer matched whole words only.**
+   - "fails" never met "failure", so `systematic-debugging` scored 0.0 (rank 78 of 83).
+   - Function words decided the top 5.
+   - Accents split Portuguese words.
+   - Natural skill recall@5 was 0.70.
+3. **τ was calibrated only on labeled rows.** At τ 0.2, about 60% of real turns that used no skill or tool still got a hint.
+4. **Connector choices had 14 options**, which falls into Laya's sharpened `choice:11+` temperature bucket. The raw 0.1006 is clamped to 0.5, which still doubles the logits.
+5. **Duplicate skills split the probability.** `anthropic-skills:pptx` and `document-skills:pptx` got 0.30 + 0.22, so neither cleared τ.
+6. **Connector labels were raw tool lists** ("Gmail tools: apply_sensitive_message_label, …"). Laya picked Slack for "draft a polite follow-up".
+
+**Fixes (each RED → GREEN, suite green):**
+- **Tokenizer:** fold accents, drop English and Portuguese stopwords, and split words longer than 4 characters into 4-grams. Natural recall@5 rose from 0.70 to 0.79, with no dev regression.
+- **Calibration:**
+  - `calibrate()` reports the alarm rate on 200 real unlabeled turns.
+  - `pick_tau()` requires precision ≥ 0.75 and alarms ≤ 10%.
+  - The eval calibrates on dev plus natural.
+- **Connector K:** connectors follow K like the other kinds. At an equal alarm rate, K5 at τ 0.5 recalled as much as or more than all 13 at τ 0.8.
+- **Duplicates:** equivalent items (same short key and label) merge into one option.
+- **Connector labels:** a connector without server instructions is labelled by its most frequent tool-name words, e.g. "Gmail: message, thread, label, spam, draft, apply.".
+
+**Result** (typed-decisions, K=5 for every kind, GPU p95 40–53 ms):
+
+| kind | τ | precision | recall | hint on unrelated real turns |
+|---|---|---|---|---|
+| skill | 0.5 | 0.93 | 0.36 | 8.5% |
+| connector | 0.6 | 1.0 | 0.36 | 5% |
+| tool | 0.5 | 0.85 | 0.30 | 7.5% |
+
+- Natural skill top-1/top-3 is 0.62/0.74, and natural connector top-1/top-3 is 0.68/0.88.
+- Real connector top-1 is 0.40 (it was 0.22 before the label fix).
+- All three smoke prompts (pytest, supplier follow-up, 6-slide deck) now return no hint. That means no false connector, and it also shows how conservative the router is.
+
+**Profile:** the router speaks on about a third of the prompts that need a skill or connector. When it speaks it is right about 9 times in 10, and it stays quiet on more than 90% of other turns.
+
+**Known gaps, deferred:**
+- Prompts with no lexical overlap: the pytest prompt's skill shortlist still misses `systematic-debugging`.
+- Workflow continuations, which would need the previous turn as context.
+- Better connector labels would come from real server instructions; the tool cache does not capture them.
