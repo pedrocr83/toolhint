@@ -61,11 +61,11 @@ The plugin's hook uses `type: mcp_tool` to call `route`. Other harnesses reach t
 
 ## Review Focus
 
-1. **A huge pasted prompt** (for example 50k characters of logs). Latency must stay bounded, because the prompt is cut to 2000 characters before embedding and choice. Tested in Task 7: `test_giant_prompt_is_truncated`.
+1. **A huge pasted prompt** (for example 50k characters of logs). Latency must stay bounded, because the prompt is cut to 2000 characters before the BM25 shortlist and the choice. BM25 on a 2000-character prompt over the real catalog costs about 11 ms. Tested in Task 7: `test_giant_prompt_is_truncated`.
 2. **A kind with no catalog items** (no Cowork, so no connectors; tool cache never refreshed). That question is omitted, the other kinds are still ranked, and nothing crashes. Tested in Task 7 (`test_empty_kind_pool_omits_question`, `test_no_items_returns_empty_without_model_calls`) and Task 5 (`test_local_server_items_missing_cache_is_empty`).
 3. **A broken SKILL.md** (invalid YAML, missing description, non-UTF-8 bytes, or a folded block scalar that should still parse). Broken ones are skipped silently and valid neighbors still load. Tested in Task 4: `test_scan_skills_skips_malformed_and_disabled`.
-4. **A corrupted or stale embedding cache** (a partial write, or vectors from a different encoder). The cache is ignored or rebuilt and routing continues. Tested in Task 7: `test_corrupt_cache_file_is_ignored`, `test_mixed_dimension_cache_rebuilds`.
-5. **Portuguese or other non-English prompts.** They pass through unchanged, and eval reports their accuracy as a separate split. Tested in Task 7 (`test_unicode_prompt_passes_through`) and Tasks 10–11 (at least 10 `synthetic-pt` prompts, reported as `dev_pt`).
+4. **A catalog item edited mid-session** (a skill description rewritten, or a plugin updated). The cached BM25 index must not go stale. Tested by the Task 12 amendment: `test_edited_item_text_refreshes_shortlist`. This replaces the embedding-cache item, which the gate amendment removed.
+5. **Portuguese or other non-English prompts.** They pass through unchanged, and eval reports their accuracy as a separate split. With the BM25 shortlist, a prompt that shares no terms with any description gets the first K items in catalog order. Laya can still answer `none`. Tested in Task 7 (`test_unicode_prompt_passes_through`) and Tasks 10–11 (at least 10 `synthetic-pt` prompts, reported as `dev_pt`).
 
 ---
 
