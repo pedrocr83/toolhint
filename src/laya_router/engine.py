@@ -201,3 +201,31 @@ class Engine:
         keep = [(item_id, p) for item_id, p in scored if item_id in by_id and p >= self.cfg.tau[kind]]
         return [Candidate(item_id, by_id[item_id].label, round(p, 2), by_id[item_id].connector)
                 for item_id, p in keep[: self.cfg.cap[kind]]]
+
+
+PREFIX = "[laya-router] advisory, ignore if irrelevant — "
+MAX_HINT_CHARS = 400
+
+
+def format_hint(ranking: Ranking, max_chars: int = MAX_HINT_CHARS) -> str:
+    """One advisory line; tools are grouped under their connector when it was also picked."""
+    if ranking.is_empty():
+        return ""
+    parts = []
+    if ranking.skills:
+        parts.append("skills: " + ", ".join(f"{c.id} ({c.p:.2f})" for c in ranking.skills))
+    grouped: dict[str, list[Candidate]] = {c.id: [] for c in ranking.connectors}
+    loose = []
+    for tool in ranking.tools:
+        (grouped[tool.connector] if tool.connector in grouped else loose).append(tool)
+    if ranking.connectors:
+        parts.append("connectors: " + ", ".join(_connector_text(c, grouped[c.id]) for c in ranking.connectors))
+    if loose:
+        parts.append("tools: " + ", ".join(f"{t.id} ({t.p:.2f})" for t in loose))
+    line = PREFIX + " · ".join(parts)
+    return line if len(line) <= max_chars else line[: max_chars - 1] + "…"
+
+
+def _connector_text(connector: Candidate, tools: list[Candidate]) -> str:
+    base = f"{connector.id} ({connector.p:.2f})"
+    return base + (" → " + ", ".join(tool.id for tool in tools) if tools else "")
