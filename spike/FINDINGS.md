@@ -123,3 +123,34 @@ Setup: typed-decisions, BM25 over name and description, K=10 for skills and tool
     - routing real phrasing to connectors (+0.29 top-1);
     - tool top-1 (+0.11 on dev);
     - the ability to abstain.
+
+### Re-run with the BM25 shortlist (user chose the hybrid, approach A)
+
+typed-decisions, BM25 over name, connector and description, on GPU:
+
+| K | dev skill top1/top3 | dev tool top1/top3 | test connector top1/top3 | skill P/R at picked τ | silent | test p50/p95 ms |
+|---|---|---|---|---|---|---|
+| **5** | **0.781 / 0.888** | 0.459 / 0.595 | 0.4 / 0.6 | 0.776 / 0.722 (τ 0.2) | 0.255 | 45 / 58 |
+| 10 | 0.69 / 0.882 | 0.486 / 0.676 | 0.4 / 0.6 | 0.777 / 0.54 (τ 0.4) | 0.145 | 60 / 71 |
+| 15 | 0.636 / 0.802 | 0.459 / 0.649 | 0.4 / 0.6 | 0.819 / 0.316 (τ 0.5) | 0.10 | 64 / 75 |
+| BM25 alone | 0.765 / 0.84 | 0.378 / 0.595 | 0.111 / 0.533 | — | — | 0.5 / 2.1 |
+
+**Gate lines, re-based (spec §12):**
+
+| Criterion | Result |
+|---|---|
+| Dev top-3 skill recall ≥ 0.70 | **PASS** (0.888) |
+| Beats BM25 on dev skill top-3 by ≥ 0.10 | **FAIL** (+0.05), accepted by the user |
+| GPU p95 ≤ 250 ms | **PASS** (58 ms, with the GPU throttling at 80–84 °C) |
+| Hook injects context | **PASS** |
+
+**Other results:**
+- dev_pt skill is 0.571/0.571 at every K.
+- VRAM is 2424 MB, and there were 0 head overflows.
+- english K10 reaches dev skill 0.711/0.856 but ranks `none` first on 58 of 187, and is silent on 54% of unlabeled turns.
+
+**Defaults set (commit fbefbbe):**
+- K is 5 for skills, 15 for connectors (all of them) and 5 for tools.
+- τ is 0.2 for skills, 0.2 for connectors and 0.5 for tools.
+
+K=5 beats K=10 on dev skill top-1 and top-3, and it holds precision 0.78 at a higher recall. It also keeps each choice at 6 options or fewer, inside Laya's calibrated temperature buckets. The cost is that gold outside the BM25 top-5 is unreachable (dev recall@5 is 0.89).

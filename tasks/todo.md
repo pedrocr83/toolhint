@@ -14,7 +14,7 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 - [x] 9. Eval dataset from transcripts
 - [x] 10. Synthetic dev prompts (+ Portuguese)
 - [x] 11. Eval runner: BM25 vs cosine vs Laya, calibration, gate lines
-- [ ] 12. GATE: user go/no-go
+- [x] 12. GATE: user go/no-go (hybrid, approach A)
 
 ## Phase 1 — build (only after gate passes)
 - [ ] 13. Decision log + MCP server
@@ -43,5 +43,10 @@ Details are in `spike/FINDINGS.md` § Gate.
   - dev tool top-1 0.49 (was 0.03);
   - real connector top-1 0.40 (BM25 alone: 0.11);
   - GPU p95 about 70 ms.
-- **Decision:** waiting on the user's go/no-go.
+- **Decision:** the user chose the hybrid on approach A. The re-run with the BM25 shortlist gives:
+  - dev skill top-3 0.888, a PASS;
+  - beats BM25 by +0.05, a FAIL that the user accepted;
+  - GPU p95 58 ms, a PASS.
+  - The defaults are K 5/15/5 and τ 0.2/0.2/0.5.
+  - Details are in `spike/FINDINGS.md` § Re-run.
 
