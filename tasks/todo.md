@@ -23,3 +23,25 @@ Plan: `plan.md` · Spec: `docs/superpowers/specs/2026-09-25-laya-router-design.m
 
 ## Review
 Filled in during execution: gate results, deviations from plan, verification outcomes, lessons.
+
+### Gate (Task 12): FAIL as planned
+
+Details are in `spike/FINDINGS.md` § Gate.
+
+- **As planned** (cosine shortlist → Laya), the best configuration is typed-decisions K5:
+  - test skill top-3 0.167, a FAIL against the 0.70 target;
+  - beats BM25 by at least 0.10: PASS, but only because BM25 scores 0.0 on those 12 rows;
+  - GPU p95 413 ms: FAIL, though that number is inflated by the run environment; the same code measured 124–127 ms p95 minutes later;
+  - hook: PASS when the tool returns hook JSON;
+  - CPU p95 2.6 s;
+  - peak VRAM 2.5 GB per process.
+- **Causes:**
+  1. The cosine shortlist over mean-pooled Laya encoder vectors caps recall: dev skill recall@10 is 0.51, against 0.92 for BM25.
+  2. About 7 of the 12 real skill labels are workflow continuations that no prompt-only router can see.
+- **Candidate fix measured:** BM25 (name + description) shortlist → Laya typed-decisions choice, K=10:
+  - dev skill top-3 0.88 (was 0.49);
+  - dev tool top-1 0.49 (was 0.03);
+  - real connector top-1 0.40 (BM25 alone: 0.11);
+  - GPU p95 about 70 ms.
+- **Decision:** waiting on the user's go/no-go.
+
