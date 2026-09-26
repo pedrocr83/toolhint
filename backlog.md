@@ -96,7 +96,8 @@ Themes group the items; the roadmap orders them.
   - `eval/synthetic.jsonl` contains 6 lines with real Cowork connector UUIDs. Git history keeps them, so either scrub the history or publish a fresh single squashed commit.
   - Optionally rewrite the commit author email to the GitHub noreply address.
 - [x] **REL-3 · Merge `feat/laya-router`** into `main`. Done 2026-09-26 (fast-forward). · S · Now
-- [ ] **REL-4 · Publish the repo · S · Now**
+- [x] **REL-4 · Publish the repo · S · Now**
+  - **Done 2026-09-26:** the repo is public at github.com/pedrocr83/toolhint, with the description and the four topics set.
   - Run `gh auth login`.
   - Write a description that mentions Laya, and add the topics `laya`, `claude-code`, `mcp` and `agent-skills`.
 
