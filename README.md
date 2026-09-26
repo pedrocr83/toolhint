@@ -37,6 +37,9 @@ The router is conservative. On prompts that need a skill or connector, it adds a
   - `landing-page`: a distinctive single-file page; graded by 14 structure and accessibility checks. The router hints the frontend-design skill (0.67).
   - Every task is also scored 1–10 by a separate Sonnet judge that runs without your hooks or plugins.
 - **Measured per run:** the score, hints shown, skills and tools used (subagents included), permission denials, tokens (input, output, cache), cost, turns and time.
+  - **Context:** the main agent's context at the first API call and at its peak, and how much of it is tool output.
+  - **Follow-ups:** a headless session has nobody to approve a plan. If one stops without its output, the harness sends up to two neutral follow-ups, the same text in both arms, and the report counts them.
+- **Cost is usage, not billing:** with a Claude subscription login, the dollar figures are list-price estimates of what counts against your plan's usage limits.
 - **Run it:**
   - From Claude Code: `/bench` (add `--dry-run` to see the plan first).
   - From a terminal: `uv run python -m toolhint.bench`, with options `--tasks`, `--reps` (default 3), `--model` (default sonnet), `--judge-model`, `--warmup` (default 45 s).

@@ -218,3 +218,10 @@ Details are in `spike/FINDINGS.md` § Gate.
 - [x] Fixtures: 3 tasks. The reference solution passes 15/15 hidden tests and an empty workspace 0/15; the reference answers pass their checklists; the misleading email alone scores under 0.3.
 - [x] Harness: `toolhint.bench` (session, metrics, grade, report, CLI), `/bench`, README section. 20 tests; suite 116 passed; ruff baseline 5.
 - [x] Smoke run (haiku, research-local, both arms): the first run found the relative TOOLHINT_LOG bug (log written inside the workspace); fixed and re-run with both arms valid. Router hints per task: coding-app → serena execute_shell_command (0.68), research-local → none, research-web → anthropic-skills:deep-research (0.55)
+- [x] First full run (20260926-153300, Sonnet, 18 runs): no quality gain from toolhint; cost +3–19%; 6 hints shown, 0 used. coding-app and research-web hit the ceiling (1.0 in both arms).
+- [x] Grader fix + `--regrade`: research-local false negatives ("Sign RouteLoom", "works-council", `[01]`/`[03, 05]` citations). The regraded run gives 0.96 ± 0.07 on against 1.0 off; the one remaining miss is genuine.
+- [x] New tasks from prompts the router hints correctly: spreadsheet (xlsx skill, 0.80) and landing-page (frontend-design skill, 0.67). Stdlib graders for xlsx and HTML. The references score 1.0 and wrong outputs score under 0.3. Sessions can no longer install packages.
+- [x] Smoke run of the new tasks (haiku): superpowers brainstorming or writing-plans stalled both landing-page sessions (no approver in headless mode), so up to 2 neutral follow-ups were added. Spreadsheet runs had no computed values without openpyxl.
+- [x] Context metrics (context at first call, peak context, tool output); multi-turn totals summed correctly; judge score 1 for a missing output. openpyxl 3.1.5 installed in the user site (the user approved; no sudo); the xlsx skill's recalc.py verified.
+- [ ] Full test: Haiku on all 5 tasks (30 runs), then Sonnet on the 2 new tasks (12 runs)
+- [ ] Context cleaning (CLN-1 to CLN-4) and CTX-1: not built. Measured need: tool output is about 2k tokens per coding or local-research run and about 30k per web-research run.
