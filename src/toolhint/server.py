@@ -16,7 +16,14 @@ from mcp.server.mcpserver import MCPServer
 from . import __version__, catalog
 from .dataset import previous_prompt
 from .decisions import DEFAULT_LOG, DecisionLog
-from .engine import PLURAL, SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint, prompt_view
+from .engine import (
+    PLURAL,
+    SHORT_PROMPT_CHARS,
+    Engine,
+    EngineConfig,
+    format_hint,
+    prompt_view,
+)
 from .items import Item, Ranking, RouteContext
 
 log = logging.getLogger("toolhint.server")
