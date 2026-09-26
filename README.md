@@ -14,7 +14,7 @@ claude plugin install toolhint@toolhint
 - **Gemini, Cursor, VS Code:** merge the matching file from `snippets/`.
 
 ## What to expect
-The router is conservative. On prompts that need a skill or connector, it adds a hint about a third of the time, and those hints are right about 9 times in 10. On other turns it adds a hint about 16% of the time; each kind fires on 5–8% of them, and tool hints are the most common. Each session loads the model, which takes about 2.4 GB of VRAM; routing takes about 50 ms on a GPU and about 2 s on a CPU. The measurements are in `spike/FINDINGS.md`.
+The router is conservative. On prompts that need a skill or connector, it adds a hint about a third of the time, and those hints are right about 9 times in 10. On other turns it adds a hint about 16% of the time; each kind fires on 5–8% of them, and tool hints are the most common. Each item is hinted at most once per session, and again after the conversation is compacted. Each session loads the model, which takes about 2.4 GB of VRAM; routing takes about 50 ms on a GPU and about 2 s on a CPU. The measurements are in `spike/FINDINGS.md`.
 
 ## Check it
 - **Try a prompt:** `toolhint route "your prompt"` prints the hint plus the ranking JSON.
@@ -26,6 +26,14 @@ The router is conservative. On prompts that need a skill or connector, it adds a
   - `TOOLHINT_K_TOOL`
   - `TOOLHINT_TAU` sets one τ for every kind.
   - `TOOLHINT_LOG`: set it to `off` to disable the log.
+
+## Update
+The router is an editable install, so it follows this checkout. Claude Code keeps its own copy of the plugin's hooks, so refresh that copy after pulling, then restart open sessions:
+```bash
+claude plugin marketplace update toolhint
+claude plugin update toolhint@toolhint
+```
+For Cowork, rebuild the zip and upload it again.
 
 ## Uninstall
 ```bash

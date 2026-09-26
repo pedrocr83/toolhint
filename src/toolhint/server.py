@@ -58,7 +58,7 @@ class RouterService:
         self._started = True
         threading.Thread(target=self.load, name="laya-load", daemon=True).start()
 
-    def route(self, ctx: RouteContext) -> str:
+    def route(self, ctx: RouteContext, dedupe: bool = False) -> str:
         engine = self._engine
         if engine is None:
             return ""
@@ -66,7 +66,7 @@ class RouterService:
             items = self._discover(ctx)
             short = len(prompt_view(ctx.prompt)) < SHORT_PROMPT_CHARS  # the length the engine checks
             ranking = engine.rank(ctx.prompt, items, previous_prompt(ctx.transcript_path, ctx.prompt) if short else "")
-            hint = format_hint(self._unseen(ctx.session_id, ranking))
+            hint = format_hint(self._unseen(ctx.session_id, ranking) if dedupe else ranking)
         except Exception:
             log.exception("route failed")
             return ""
@@ -112,11 +112,13 @@ def build_server(service: RouterService) -> MCPServer:
 
     @server.tool(name="route", description=ROUTE_DESCRIPTION)
     def route(prompt: str, cwd: str = "", transcript_path: str = "", session_id: str = "",
-              format: str = "text", event: str = "") -> str:  # the plugin hook passes a literal "format": "hook"
+              format: str = "text", event: str = "", dedupe: bool = False) -> str:
+        # the plugin hook passes "format": "hook" and "dedupe": true; an older hooks.json (no compaction
+        # reset) sends no dedupe, so its sessions keep getting repeats rather than losing hints for good
         if event == "compact":  # SessionStart(compact): earlier hints are gone from the context
             service.forget(session_id)
             return ""
-        hint = service.route(RouteContext(prompt, cwd, transcript_path, session_id))
+        hint = service.route(RouteContext(prompt, cwd, transcript_path, session_id), dedupe)
         return hook_output(hint) if format == "hook" else hint
 
     return server

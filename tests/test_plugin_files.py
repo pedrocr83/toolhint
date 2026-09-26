@@ -35,3 +35,8 @@ def test_compaction_hook_resets_the_session_memory():
     hook = entry["hooks"][0]
     assert entry["matcher"] == "compact" and hook["type"] == "mcp_tool" and hook["tool"] == "route"
     assert hook["input"] == {"prompt": "", "session_id": "${session_id}", "event": "compact"}
+
+
+def test_prompt_hook_opts_into_session_dedupe():
+    hook = load("plugin/hooks/hooks.json")["hooks"]["UserPromptSubmit"][0]["hooks"][0]
+    assert hook["input"].get("dedupe") is True

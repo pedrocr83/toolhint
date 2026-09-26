@@ -130,9 +130,9 @@ def test_decision_log_records_the_device(tmp_path):
 def test_a_session_is_not_hinted_the_same_item_twice():
     svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
     svc.load()
-    assert svc.route(RouteContext("please debug the failing test", session_id="s1")) == HINT
-    assert svc.route(RouteContext("debug the other failing test too", session_id="s1")) == ""
-    assert svc.route(RouteContext("please debug the failing test", session_id="s2")) == HINT
+    assert svc.route(RouteContext("please debug the failing test", session_id="s1"), dedupe=True) == HINT
+    assert svc.route(RouteContext("debug the other failing test too", session_id="s1"), dedupe=True) == ""
+    assert svc.route(RouteContext("please debug the failing test", session_id="s2"), dedupe=True) == HINT
 
 
 @pytest.mark.anyio
@@ -140,20 +140,21 @@ async def test_compaction_event_lets_the_session_see_its_hints_again():
     svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
     svc.load()
     async with Client(build_server(svc)) as client:
-        assert text_of(await client.call_tool("route", PROMPT)) == HINT
-        assert text_of(await client.call_tool("route", {**PROMPT, "prompt": "debug the other failing test"})) == ""
+        prompt = {**PROMPT, "dedupe": True}
+        assert text_of(await client.call_tool("route", prompt)) == HINT
+        assert text_of(await client.call_tool("route", {**prompt, "prompt": "debug the other failing test"})) == ""
         assert text_of(await client.call_tool("route", {"prompt": "", "session_id": "s1", "event": "compact"})) == ""
-        assert text_of(await client.call_tool("route", {**PROMPT, "prompt": "and debug the flaky one as well"})) == HINT
+        assert text_of(await client.call_tool("route", {**prompt, "prompt": "and debug the flaky one as well"})) == HINT
 
 
 def test_hint_memory_keeps_at_most_64_sessions():
     svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
     svc.load()
-    svc.route(RouteContext("please debug the failing test", session_id="s0"))
+    svc.route(RouteContext("please debug the failing test", session_id="s0"), dedupe=True)
     for i in range(1, 65):
-        svc.route(RouteContext(f"please debug failing test number {i}", session_id=f"s{i}"))
-    assert svc.route(RouteContext("debug the other failing test", session_id="s0")) == HINT
-    assert svc.route(RouteContext("debug the other failing test again", session_id="s64")) == ""
+        svc.route(RouteContext(f"please debug failing test number {i}", session_id=f"s{i}"), dedupe=True)
+    assert svc.route(RouteContext("debug the other failing test", session_id="s0"), dedupe=True) == HINT
+    assert svc.route(RouteContext("debug the other failing test again", session_id="s64"), dedupe=True) == ""
 
 
 def test_short_follow_ups_with_tag_blocks_get_the_earlier_prompt(tmp_path):
@@ -165,3 +166,10 @@ def test_short_follow_ups_with_tag_blocks_get_the_earlier_prompt(tmp_path):
     selection = "<ide_selection>" + "def login(user): ...\n" * 10 + "</ide_selection>"
     svc.route(RouteContext(selection + " and the unit tests?", transcript_path=str(transcript)))
     assert scorer.choose_calls[-1][0].get("earlier request") == "refactor the auth module"
+
+
+def test_repeats_are_hinted_again_without_the_dedupe_flag():
+    svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
+    svc.load()
+    assert svc.route(RouteContext("please debug the failing test", session_id="s1")) == HINT
+    assert svc.route(RouteContext("debug the other failing test too", session_id="s1")) == HINT
