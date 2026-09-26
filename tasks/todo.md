@@ -212,3 +212,9 @@ Details are in `spike/FINDINGS.md` § Gate.
   - Negatives are 323, not the plan's 200.
   - The plan's 21%/56% multi-item shares and the backlog's 28%/53% measure different things.
   - Neither is edited: the plan is the record of intent.
+
+## Benchmark with and without toolhint (plan.md, 2026-09-26)
+- [x] Probes: the stream carries no hint, but `TOOLHINT_LOG` reaches the router. `--settings` must disable both `toolhint@toolhint` and `toolhint@synced`. The judge runs isolated with `--setting-sources project --strict-mcp-config --tools ""` (`--bare` needs an API key).
+- [x] Fixtures: 3 tasks. The reference solution passes 15/15 hidden tests and an empty workspace 0/15; the reference answers pass their checklists; the misleading email alone scores under 0.3.
+- [x] Harness: `toolhint.bench` (session, metrics, grade, report, CLI), `/bench`, README section. 20 tests; suite 116 passed; ruff baseline 5.
+- [x] Smoke run (haiku, research-local, both arms): the first run found the relative TOOLHINT_LOG bug (log written inside the workspace); fixed and re-run with both arms valid. Router hints per task: coding-app → serena execute_shell_command (0.68), research-local → none, research-web → anthropic-skills:deep-research (0.55)
