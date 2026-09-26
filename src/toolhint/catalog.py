@@ -23,9 +23,6 @@ LABEL_CHARS = 80
 TEXT_CHARS = 1500
 COWORK_ROOT = Path(".config") / "Claude" / "local-agent-mode-sessions"
 FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
-# "Use when…" openers spend the 80-char label on words every description shares
-BOILERPLATE = re.compile(r"^(?:this skill (?:should be|is) used|use(?: this(?: skill| tool)?)?)\s+"
-                         r"(?:(?:when(?:ever)?|if|for|to)\s+)?", re.IGNORECASE)
 
 
 def one_line(text: str, limit: int = LABEL_CHARS) -> str:
@@ -37,7 +34,7 @@ def one_line(text: str, limit: int = LABEL_CHARS) -> str:
 
 def make_item(kind: Kind, item_id: str, description: str, source: str, connector: str | None = None) -> Item:
     flat = " ".join(description.split())
-    return Item(kind, item_id, one_line(BOILERPLATE.sub("", flat) or flat), flat[:TEXT_CHARS], connector, source)
+    return Item(kind, item_id, one_line(flat), flat[:TEXT_CHARS], connector, source)
 
 
 def load_json(path: Path | None) -> dict:
