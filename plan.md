@@ -1,111 +1,69 @@
-# Router fixes (backlog RT-1 to RT-6)
+# Benchmark: Claude Code with and without toolhint
 
-- **Scope:** backlog items RT-1 to RT-6. The user approved it on 2026-09-26 ("do the router fixes").
-- **Branch:** `feat/router-fixes`, from `main` at `0bbea65`. Nothing is pushed until the user says so.
-- **Earlier plan:** the build plan now lives in `docs/superpowers/plans/2026-09-25-laya-router-plan.md`.
+**Goal:** a harness that runs realistic tasks in headless Claude Code sessions, with toolhint on and off. It compares each output against expected results, and records the skills, tools and tokens each run used.
 
-## Evidence gathered before planning
+**Decided with the user (2026-09-26):**
+- **Tasks:** one coding-app task, plus two research variants, one working from fixed local sources and one from live web research.
+- **Runs:** 3 per arm, on Sonnet.
+- **Permissions:** `acceptEdits` plus a command allowlist.
+- **Grading:** deterministic checks plus a Sonnet judge.
 
-- **Multi-item turns are common.** Across 137 labeled real turns, the share using two or more distinct items is 21% for skills, 16% for connectors and 56% for tools. Today at most one item per kind can pass τ (backlog RT-1).
-- **Skill timing.** Of 48 skill turns, the skill is the turn's first tool call in 16. In 12 it comes after 1–6 tool calls, and in 20 (42%) after more than 6.
-- **Labels already fit Laya's budget.**
-  - Labels are one sentence of at most 80 characters (`catalog.one_line`), so 6 options stay well below Laya's 256-token option budget.
-  - The waste is boilerplate: 24 of 87 skill labels start with "Use when…", "Use this…" or "This skill…".
-- **The GPU is full.** Leftover per-session servers hold 5.6 of 8 GB, so eval runs on CPU at about 1.8 s per prompt.
-
-## Global constraints
-
-- **Behavior:** fail-open everywhere, and the hint stays at or under 400 characters.
-- **Dependencies:** no new dependencies; `laya==0.3.20` is unchanged.
-- **Testing:** tests come first, with `FakeScorer`.
-- **Lint:** ruff stays at its 5 baseline issues.
-- **Private data:** anything derived from transcripts stays in `eval/data` and `eval/results`, both gitignored.
+## How a run works (verified by probes on 2026-09-26)
+- **Isolation:** every run gets a fresh workspace, `bench/runs/<stamp>/<task>/<arm>-<rep>/workspace`, which is its own git repo. The folder is gitignored.
+- **Command:** `claude -p --input-format stream-json --output-format stream-json --verbose --model sonnet --permission-mode acceptEdits --allowedTools … --max-budget-usd … --no-session-persistence`. This is the user's real setup: all their plugins, hooks and CLAUDE.md. The flag keeps benchmark prompts out of `~/.claude/projects`, and so out of toolhint's eval extraction.
+- **Off arm:** `--settings '{"enabledPlugins": {"toolhint@toolhint": false, "toolhint@synced": false}}'`.
+  - Turning off only the local copy lets the synced Cowork upload load instead (seen in a probe).
+  - Each run checks the `init` event: the on arm must show `plugin:toolhint:router` connected, and the off arm must show no toolhint plugin. A mismatch marks the run invalid.
+- **Warm-up:** both arms wait before the prompt, 45 s by default, so the router's model has loaded. Without the wait, the first prompt of a session gets no hint.
+- **Hints:** the stream carries no UserPromptSubmit hook output. So each run points `TOOLHINT_LOG` at its own `decisions.jsonl`; the probe confirmed the server inherits the env.
+  - For a task's first prompt nothing is suppressed as a repeat yet, so the logged ranking is exactly the hint shown.
+  - A record carrying the session's id proves the hook ran. A record with no session id is the model calling `route` itself.
+  - The user's own decision log stays clean.
+- **Metrics:** taken from the stream.
+  - **Tools:** `tool_use` blocks, subagents included (`parent_tool_use_id`).
+  - **Skills:** the `Skill` tool's input.
+  - **Result event:** `usage`, `modelUsage`, `total_cost_usd`, `num_turns`, `duration_ms`, `permission_denials` and `subagent_stats`.
+- **Judge:** `claude -p --model sonnet --setting-sources project --strict-mcp-config --tools "" --no-session-persistence`, run from an empty folder. The probe showed no hooks, no user plugins, no MCP servers, about 9.5k tokens of context, and about 0.02 USD a call.
+  - `--bare` is not usable: it needs `ANTHROPIC_API_KEY`, and the user logs in with OAuth.
+- **Order:** runs go one at a time; each on-arm session loads a 2.7 GB router on an 8 GB GPU. Arms alternate, with the starting arm flipped each rep, so drift over the session (rate limits, the web) hits both arms.
 
 ## Tasks
+- **`coding-app`:**
+  - **Brief:** a Python command-line expense tracker using only the standard library, with a pinned interface: `add`, `list`, `summary`, `delete`, JSON storage and exit codes. The prompt asks for tests too.
+  - **Graded by:**
+    - hidden acceptance tests, run after the session through a subprocess;
+    - the agent's own tests;
+    - the judge, who sees the spec, the code and the rubric.
+  - **Proof the tests are right:** a reference solution under `reference/` passes every hidden test.
+- **`research-local`:**
+  - **Brief:** six fictional sources (Markdown, CSV and plain text) about a warehouse-software decision, with deliberate traps: a conflicting claim, a dependency and a deadline. The prompt asks for a COO brief in `BRIEF.md`, at most 600 words, citing sources.
+  - **Graded by:**
+    - a checklist of regex points, plus checks on word count, the number of distinct sources cited, and whether the file exists;
+    - the judge, against `reference.md`.
+  - **Proof the checklist is right:** `reference.md` passes every point.
+- **`research-web`:**
+  - **Brief:** a report on MCP transports and authorization, in `RESEARCH.md`, at most 700 words, with URLs.
+  - **Graded by:** a checklist of stable facts (stdio, Streamable HTTP, SSE deprecated, JSON-RPC, OAuth 2.1, PKCE, RFC 9728/8707, and so on), at least 3 URLs including modelcontextprotocol.io, and the judge. The judge is told the reference may be out of date and must not penalize newer, sourced facts.
 
-### Task 1 · RT-5 · Strip label boilerplate before the 80-character cut
-- **Change:** `catalog.make_item` removes a leading "Use when…", "Use this skill when/to/for…" or "This skill should be used when…" before `one_line`. The BM25 text stays unchanged.
-- **Tests:**
-  - Boilerplate is stripped.
-  - The distinguishing words survive the 80-character cut.
-  - Other labels are unchanged.
-- **Measure once with Laya's tokenizer:** the longest option at 6 options, before and after the change.
-- **Ruling:** if nothing is truncated, per-decision token logging is not needed.
+## Build (TDD for every pure part)
+1. **Fixtures:** `bench/tasks/*`, with tests that the reference solution passes the hidden tests and that `reference.md` passes each checklist.
+2. **`toolhint.bench.metrics`:** events plus decision records give tools, skills, subagents, denials, usage, cost, hints, uptake and the arm check.
+3. **`toolhint.bench.grade`:** the hidden-tests runner and pytest summary parser, the checklist, and the judge command and its JSON parsing.
+4. **`toolhint.bench.session`:** spawn, warm-up, prompt, read until the result or a timeout, then kill. Tested against a fake `claude` script.
+5. **`toolhint.bench.report`:** a markdown table per task per arm (mean ± sd) plus a per-run table.
+6. **CLI:** `python -m toolhint.bench`, with `--tasks`, `--reps`, `--arms`, `--model`, `--judge-model`, `--warmup`, `--dry-run` and `--report DIR`.
+7. **Docs:** a `/bench` project command, a README section, and a `.gitignore` entry for `bench/runs/`.
+8. **Smoke run:** 1 rep of `research-local`, both arms, on haiku with a small budget, checked end to end. Cost about 0.5 USD.
 
-### Task 2 · RT-4 · A better view of the prompt
-- **`engine.prompt_view(prompt)`:**
-  - Fenced code becomes `[code]`.
-  - Tag blocks are removed, reusing `dataset.TAG_BLOCK`.
-  - Past 2000 characters, it keeps the first 1200 and the last 800 characters.
-- **Short prompts (under 60 characters):**
-  - The server reads the previous user prompt from `transcript_path`.
-  - `dataset.previous_prompt` reads at most the last 256 KB, reuses `prompt_text` and skips the current prompt.
-  - The server passes it to `Engine.rank(..., previous=)`, so Laya's state becomes `{"request": …, "earlier request": …}`.
-- **Tests:**
-  - The `prompt_view` cases.
-  - `previous_prompt` reads only the tail and skips tool results, meta entries and the current prompt.
-  - The earlier request is added only for short prompts.
-
-### Task 3 · RT-3 · The device in every decision; a single warning on a GPU→CPU fallback
-- **Change:**
-  - The `Scorer` protocol gains `device`.
-  - `LayaScorer.device` reads the agent's current device, and a drop from CUDA to CPU logs one warning.
-  - `Ranking.device` carries it, and so does the decision log.
-- **Tests:** a fake `laya.Router` for `LayaScorer`, and the device field in the log.
-- **Ruling:** no automatic reload on the GPU. Under the same memory pressure it would fail again; the real fix is RUN-1.
-
-### Task 4 · RT-6 · Session memory for hints
-- **Remember per session:** `RouterService` remembers which item ids it has already hinted in each session. Repeats are dropped from the hint, and "" is returned when nothing is new. The map holds at most 64 sessions, evicting the oldest first.
-- **Reset on compaction:**
-  - `route(event="compact")` clears that session's memory.
-  - `hooks.json` adds a SessionStart hook with matcher `compact` that calls `route` with `{session_id, event: "compact"}`.
-- **Tests:**
-  - A repeat is suppressed.
-  - Other sessions are unaffected.
-  - Compaction resets the memory.
-  - The hook entry exists.
-- **Live check:** compaction in a headless session, if the CLI allows it; otherwise record it as unverified.
-
-### Task 5 · RT-1 + RT-2 · Evidence run and decision
-- **Scoring run:** score the final pipeline once on CPU and store the probabilities under `eval/results`. The inputs are dev (224), natural (96), transcripts (84) and negatives (200).
-- **Rules compared per kind, on the same scores, at precision ≥ 0.75 and false alarms ≤ 10%:**
-  - **A** (today): the top candidate, when `p ≥ τ`.
-  - **B:** the top candidate, when `r = p / (p + p_none) ≥ τ′`. Under a softmax, r depends only on that item and "none", not on the other options.
-  - **C:** every candidate with `r ≥ τ′`, up to the caps (3/2/3). This is the multi-pick rule.
-- **Measuring multi-pick precision:**
-  - Per hint: is the gold item in the shown set?
-  - Per item: how many shown items are gold?
-  - For real transcript rows, every item used in the turn counts as gold.
-- **Option-count check:** on a labeled subset, shrink the pools to 2 and 3 candidates. Compare how much `p_gold` and `r_gold` move under Laya's per-option-count temperatures and under one pinned temperature (the 6–10 option value).
-- **Decision:**
-  - Adopt C if its recall is at least A's for every kind, with per-item precision at least 0.6.
-  - Otherwise adopt B if it is no worse than A.
-  - Otherwise keep A, and record why.
-- **Outcome (2026-09-26):** A kept. B and C lose recall on every kind (skill 0.335 → 0.085, connector 0.355 → 0.177, tool 0.355 → 0.194), because r ≥ p lifts negatives too. Pinning the temperature makes the option-count drift worse, not better. The run also showed RT-5 costs 5 skill hints of 260, so Task 1 is reverted. Details in `tasks/todo.md`.
-
-### Task 6 · RT-1 + RT-2 · Implement the decision
-- **Code:** `engine._select` and `evaluate.shows`/`calibrate` switch to the chosen rule. `LayaScorer` pins every choice temperature to the 6–10 option value, if Task 5 supports it.
-- **Settings and docs:**
-  - Recalibrate `DEFAULT_TAU`.
-  - Update the README's "What to expect" section.
-  - Update the backlog's status.
-- **Tests:**
-  - Two items at 0.4 each with "none" at 0.2 give two picks.
-  - "None" on top still means no hint.
-  - The caps are honored.
-  - The temperatures are pinned.
-- **Outcome:** no code change. Task 5 chose A with Laya's own temperatures, so these tests have nothing to pin.
-
-### Finish
-- Run the full suite, the slow test and ruff (baseline).
-- Do a live `toolhint route` and a headless hook check.
-- Get a review from a fresh reviewer, then write the change report.
-- Merge into local `main` without pushing.
+## Constraints
+- Nothing is installed; the harness uses the repo's venv, and pytest is already a dev dependency.
+- Hidden tests, reference solutions and reference answers are never copied into the workspace.
+- Budget caps (USD) per run: coding-app 6, research-local 3, research-web 4. With the 121k-token setup context a session starts at about 0.45 USD on Sonnet.
+- No file outside the repo is written, apart from what Claude Code itself writes for headless sessions.
 
 ## Review focus
-
-1. **Hook latency:** `previous_prompt` reads only the transcript's tail, and only for short prompts.
-2. **Fail-open:** transcript read errors, a missing `session_id` or a device read error must never break routing or the log.
-3. **Memory:** session memory holds item ids only, is bounded per session, and holds at most 64 sessions.
-4. **Deduplication:** it must not leak across sessions, and it must reset after compaction.
-5. **Fair comparison:** every rule is compared on the same stored scores, with n reported, and nothing is chosen after the fact.
+1. **A wrongly labelled arm:** the off arm must never load any toolhint copy, and the on arm must be routed.
+2. **Leaks:** a hidden test or reference must not end up in the workspace.
+3. **Hangs:** a timed-out or crashed session must be killed and recorded, not stop the batch.
+4. **Budget:** hitting the budget cap is recorded as such, not as a grading failure of the harness.
+5. **Fair grading:** both arms are graded by the same code and the same judge prompt.

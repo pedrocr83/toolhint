@@ -179,7 +179,7 @@ Details are in `spike/FINDINGS.md` § Gate.
 - Live check: headless two-turn session e0e54e4c (tools disabled) → transcript holds `[toolhint] advisory, ignore if irrelevant — skills: anthropic-skills:morning (0.54)`; decision log 845 ms.
 - Observed RT-3 live: three leftover `laya-router` servers from open sessions held 5.6 GB of the 8 GB RTX 3070 Laptop GPU, so new processes fell back to CPU (845–895 ms per route). Restarting those sessions frees it.
 
-## Router fixes RT-1 to RT-6 (plan.md, 2026-09-26)
+## Router fixes RT-1 to RT-6 (docs/superpowers/plans/2026-09-26-router-fixes-plan.md, 2026-09-26)
 - [x] Task 1 · RT-5 label boilerplate stripped before the 80-char cut (options max 36 tokens, worst 6-option sum 213 of 240: Laya never truncates, so no per-decision token log). **Reverted after Task 5:** paired GPU ablation, 260 labeled skill prompts at τ 0.5: 4 hints gained, 9 lost (all 9 still ranked gold first, p fell to 0.44–0.49); top-3 unchanged; hints show ids only, so no readability gain
 - [x] Task 2 · RT-4 prompt view (code, tags, head+tail) and earlier request for short prompts
 - [x] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback (no auto-reload: it would fail again under the same memory pressure; RUN-1 is the fix)
