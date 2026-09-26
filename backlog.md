@@ -37,7 +37,7 @@ Themes group the items; the roadmap orders them.
 |---|---|
 | Release | REL-1, REL-2, REL-3, REL-4 |
 | Cowork | COW-1 |
-| Router fixes | RT-1 to RT-6 |
+| Router fixes | RT-1, RT-3 to RT-6 |
 | Recall | REC-1 |
 | Evaluation | EV-1, EV-3 |
 | Privacy | SEC-1, SEC-2 |
@@ -72,6 +72,7 @@ Themes group the items; the roadmap orders them.
 | Install | INS-3 to INS-6 |
 | Evaluation | EV-2, EV-4, EV-5, EV-6 |
 | Cowork | COW-2 |
+| Router fixes | RT-2 |
 
 ---
 
@@ -101,7 +102,8 @@ Themes group the items; the roadmap orders them.
 
 ## RT: Fix the current router (all verified in our code)
 
-- [ ] **RT-1 · Allow more than one pick per kind · S + M · Now**
+- [x] **RT-1 · Allow more than one pick per kind · S + M · Now**
+  - **Closed 2026-09-26, not adopted.** Real turns do use several items: 28% of skill turns, 16% of connector turns and 53% of tool turns use two or more. But on the same stored scores, at precision ≥ 0.75 and false alarms ≤ 10%, the relative rule loses recall on every kind. Top pick only: skill 0.335 → 0.085, connector 0.355 → 0.177, tool 0.355 → 0.194. Multi-pick does no better. The cause: `p / (p + p_none)` is never below `p`, so prompts that need nothing score high too, and τ′ has to rise to 0.8–0.9. Numbers in `tasks/todo.md`.
   - **Problem:**
     - [engine.py:171](src/toolhint/engine.py#L171) keeps items with `p ≥ τ`, and Laya's choice is one softmax whose probabilities add up to 1. With τ at 0.5 or 0.6, at most one item per kind can ever pass, so the caps of 3/2/3 never matter.
     - When two items are relevant, they split the probability and both can miss τ.
@@ -112,7 +114,12 @@ Themes group the items; the roadmap orders them.
   - **Evidence:**
     - janmejai2002/gutcheck: 17% of its test prompts need 2–3 items, and it only gets multiple picks by using a 0.2 threshold.
     - pilotspace/laya-codex, 0xSarnavo/laya-coding-router.
-- [ ] **RT-2 · Calibrate per option count · S · Now**
+- [ ] **RT-2 · Calibrate per option count · S · Later**
+  - **Measured 2026-09-26; stays open.**
+    - The problem statement below is backwards. On 150 labeled prompts, shrinking the pool from 5 candidates to 1 raises `p_gold` by 0.24 on average, and to 2 raises it by 0.06. Small pools inflate p; they don't flatten it.
+    - Pinning every temperature to the 6–10 value makes the drift worse (0.36 and 0.17).
+    - Both local catalogs have at least 6 items of every kind, so only users with fewer than 5 items of a kind are affected.
+    - Fitting τ per option count needs prompts that need nothing, scored at small pool sizes. Not done, and K is not in the decision log yet.
   - **Problem:**
     - The typed-decisions checkpoint's `temperature_by_options` is an exact copy of the base checkpoint's (verified in the cached configs).
     - Laya divides by T = 1.76 for 3–5 options but T = 1.00 for 6–10. Our τ was tuned at 6 options.
@@ -124,11 +131,18 @@ Themes group the items; the roadmap orders them.
     - PerryLink/laya-mcp `calibration.py`: at least 30 samples per group, otherwise no adjustment.
     - omkarghugarkar007/system-one-model-finetuning `TemperatureMap`.
     - wuyoscar/jev-skill `references/calibration.md`: "do not transfer thresholds silently across K".
-- [ ] **RT-3 · Detect the silent fallback from GPU to CPU · S · Now**
+- [x] **RT-3 · Detect the silent fallback from GPU to CPU · S · Now**
+  - **Done 2026-09-26:** every decision logs its device, and the server warns once on a fallback. There is no automatic reload, since it would hit the same memory pressure. RUN-1 is the fix.
   - **Problem:** after any CUDA out-of-memory error, laya 0.3.20 moves the model to CPU for the rest of the process (`laya/agent.py:625-635`) and only prints a warning. At 2.4 GB per session, a few parallel sessions can trigger it, and routing then takes about 2 s a turn.
   - **Do:** log the device with every decision. On a fallback, reload on the GPU or report a degraded state (SEC-4). RUN-1 makes it much less likely.
   - **Seen live 2026-09-26:** three per-session servers held 5.6 GB of an 8 GB RTX 3070 Laptop GPU; the next process fell back to CPU (845–895 ms per route).
-- [ ] **RT-4 · Give Laya a better view of the prompt · S · Now**
+- [x] **RT-4 · Give Laya a better view of the prompt · S · Now**
+  - **Done 2026-09-26:**
+    - Code fences and tag blocks are collapsed, and long prompts keep their start and end.
+    - Prompts under 60 characters also carry the previous prompt.
+    - `project` is not added.
+    - **Effect on the eval sets:** neutral, apart from 2 fewer false tool hints out of 323. Their prompts are already cleaned when extracted.
+    - **Live prompts:** 5 of 20 logged hook prompts carried tag blocks, and 8 were under 60 characters.
   - **Do:**
     - Keep the start and the end of long prompts instead of only the first 2000 characters ([engine.py:140](src/toolhint/engine.py#L140)). A pasted log with the question at the end currently loses the question.
     - Strip fenced code, pasted logs and `<system-reminder>` blocks.
@@ -141,7 +155,10 @@ Themes group the items; the roadmap orders them.
     - SupremeDreamZ/laya-code-router `newTurnPrompt`.
     - 0xSarnavo: the `{prompt, project}` state.
   - **Risk:** an earlier topic can leak into routing, so watch the false-alarm rate.
-- [ ] **RT-5 · Fit Laya's option budget · S · Now**
+- [x] **RT-5 · Fit Laya's option budget · S · Now**
+  - **Closed 2026-09-26:**
+    - **No truncation happens.** The longest option is 36 tokens, and the worst 6-option total is 213 of 240.
+    - **Boilerplate stripping was tried and reverted.** On the same GPU, over 260 labeled skill prompts, 4 correct hints were gained and 9 lost. All 9 were still ranked first but fell below τ.
   - **Problem:**
     - On typed-decisions, the options share a 256-token budget.
     - With 6 options, once they total more than about 240 tokens, each is cut to 40 tokens, and the instruction to whatever is left (at least 8 tokens). This is `build_sequence` in `laya/common.py`.
@@ -154,7 +171,11 @@ Themes group the items; the roadmap orders them.
     - PerryLink/laya-mcp: token-budget preflight.
     - AdelysAlberto/pi-laya-router: `plan/laya-api-contract.md`.
     - Upstream Laya's browser-agent fine-tune notes: raising `head_max_len` helped.
-- [ ] **RT-6 · Session memory for hints · S · Now**
+- [x] **RT-6 · Session memory for hints · S · Now**
+  - **Done 2026-09-26:**
+    - An item is hinted once per session. The memory holds ids only, for at most 64 sessions.
+    - A `SessionStart` hook with matcher `compact` clears it.
+    - **Verified live:** after `/compact` the hint came back. With the hook removed, it stayed silent.
   - **Do:**
     - Don't repeat an identical hint within a session.
     - Re-send the active hints after compaction, using a SessionStart hook with matcher `compact`. Verify that `mcp_tool` hooks run for that source; the docs say they are skipped at launch because servers aren't up yet.
@@ -751,7 +772,7 @@ Each rule was learned from another project's failure.
 
 1. Does a hook of type `mcp_tool` get to return `updatedToolOutput`? What is each built-in tool's exact output shape? (CLN-4)
 2. Can `PreCompact` change the compaction instructions, or only block compaction? (CLN-8)
-3. Do `mcp_tool` hooks run for `SessionStart` with source `compact`? (RT-6)
+3. ~~Do `mcp_tool` hooks run for `SessionStart` with source `compact`? (RT-6)~~ Yes. This was verified live on 2026-09-26: the server stays up across compaction, and the hook reaches it.
 4. Is our 0.93 skill precision measured on data τ wasn't tuned on? (EV-1)
 5. For our own usage, how many skill and tool uses happen after N tool calls? That is, what's the ceiling for routing at the prompt? (LRN-5, REC-7)
 6. Can cloud Cowork reach a local MCP server at all? (COW-1)

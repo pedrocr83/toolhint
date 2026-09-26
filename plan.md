@@ -81,6 +81,7 @@
   - Adopt C if its recall is at least A's for every kind, with per-item precision at least 0.6.
   - Otherwise adopt B if it is no worse than A.
   - Otherwise keep A, and record why.
+- **Outcome (2026-09-26):** A kept. B and C lose recall on every kind (skill 0.335 → 0.085, connector 0.355 → 0.177, tool 0.355 → 0.194), because r ≥ p lifts negatives too. Pinning the temperature makes the option-count drift worse, not better. The run also showed RT-5 costs 5 skill hints of 260, so Task 1 is reverted. Details in `tasks/todo.md`.
 
 ### Task 6 · RT-1 + RT-2 · Implement the decision
 - **Code:** `engine._select` and `evaluate.shows`/`calibrate` switch to the chosen rule. `LayaScorer` pins every choice temperature to the 6–10 option value, if Task 5 supports it.
@@ -93,6 +94,7 @@
   - "None" on top still means no hint.
   - The caps are honored.
   - The temperatures are pinned.
+- **Outcome:** no code change. Task 5 chose A with Laya's own temperatures, so these tests have nothing to pin.
 
 ### Finish
 - Run the full suite, the slow test and ruff (baseline).

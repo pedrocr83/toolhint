@@ -180,10 +180,16 @@ Details are in `spike/FINDINGS.md` § Gate.
 - Observed RT-3 live: three leftover `laya-router` servers from open sessions held 5.6 GB of the 8 GB RTX 3070 Laptop GPU, so new processes fell back to CPU (845–895 ms per route). Restarting those sessions frees it.
 
 ## Router fixes RT-1 to RT-6 (plan.md, 2026-09-26)
-- [x] Task 1 · RT-5 label boilerplate stripped before the 80-char cut (options max 36 tokens, worst 6-option sum 213 of 240: Laya never truncates, so no per-decision token log)
+- [x] Task 1 · RT-5 label boilerplate stripped before the 80-char cut (options max 36 tokens, worst 6-option sum 213 of 240: Laya never truncates, so no per-decision token log). **Reverted after Task 5:** paired GPU ablation, 260 labeled skill prompts at τ 0.5: 4 hints gained, 9 lost (all 9 still ranked gold first, p fell to 0.44–0.49); top-3 unchanged; hints show ids only, so no readability gain
 - [x] Task 2 · RT-4 prompt view (code, tags, head+tail) and earlier request for short prompts
 - [x] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback (no auto-reload: it would fail again under the same memory pressure; RUN-1 is the fix)
-- [x] Task 4 · RT-6 per-session hint memory, reset on compaction (live compaction check pending)
-- [ ] Task 5 · RT-1/RT-2 evidence run and decision (rules A/B/C, option-count check)
-- [ ] Task 6 · RT-1/RT-2 implement the decision
+- [x] Task 4 · RT-6 per-session hint memory, reset on compaction. Live headless check 2026-09-26: prompt 1 hinted `morning`; prompt 2 showed only Google Calendar (`morning` suppressed); after `/compact` prompt 1 hinted `morning` again. Control with the SessionStart hook removed: silent after `/compact`, so the server survives compaction and the hook resets it
+- [x] Task 5 · RT-1/RT-2 evidence run and decision: **keep A, no temperature pinning**. Calibration set 320 rows + 323 negatives, CPU, same stored scores for every rule; τ picked at precision ≥ 0.75, alarms ≤ 10%:
+  - skill: A τ 0.5 R 0.335 P 0.906 · B τ 0.9 R 0.085 · C τ 0.9 R 0.085 (itemP 0.917)
+  - connector: A τ 0.6 R 0.355 P 1.0 · B/C τ 0.8 R 0.177
+  - tool: A τ 0.5 R 0.355 P 0.846 · B/C τ 0.8 R 0.194
+  - Why: r = p/(p+p_none) ≥ p, so negatives score high too; holding alarms ≤ 10% pushes τ′ to 0.8–0.9 and halves recall. Real turns (84 rows) are near zero for every rule, so they do not separate them
+  - Option count (150 rows, gold pool shrunk from 5 candidates to 1 or 2): p_gold rises +0.24 at 2 options and +0.06 at 3 (small pools inflate p; the backlog expected the opposite). r drifts 0.080/0.073; pinning T to the 6–10 value makes it worse (r 0.096/0.078, p 0.357/0.172). Both local catalogs have ≥ 6 items per kind (claude-code 87/13/265, cowork 18/6/107), so every question has the calibrated 6 options
+  - RT-4 ablation: identical on dev/natural except 2 fewer tool false alarms of 323; changes 0 of 84 extracted real prompts (the extractor already strips tags), but 5 of 20 live hook prompts carry tag blocks and 8 are under 60 chars. Kept
+- [x] Task 6 · RT-1/RT-2: no engine or scorer change (A kept, nothing pinned); RT-5 reverted; backlog statuses updated. README numbers still hold (14% of other turns hinted vs "about 16%"; 4.6–6.8% per kind vs "5–8%"), left as is
 - [ ] Finish: suite, slow test, ruff baseline, live checks, fresh review, change report, local merge
