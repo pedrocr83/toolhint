@@ -13,7 +13,8 @@ KIND = {"skills": "skill", "connectors": "connector", "tools": "tool"}
 
 def summarize(arm: str, events: list[dict], decisions: list[dict]) -> dict:
     init = next((e for e in events if e.get("type") == "system" and e.get("subtype") == "init"), {})
-    result = next((e for e in reversed(events) if e.get("type") == "result"), {})
+    results = [e for e in events if e.get("type") == "result"]
+    result = results[-1] if results else {}  # cost and modelUsage add up over turns; num_turns and denials do not
     session = init.get("session_id") or result.get("session_id", "")
     main, sub, skills = tool_uses(events)
     routed = next((d for d in decisions if d.get("session") == session), {})
@@ -24,16 +25,43 @@ def summarize(arm: str, events: list[dict], decisions: list[dict]) -> dict:
         "session_id": session, "valid": not problem, "invalid_reason": problem,
         "result_subtype": result.get("subtype"), "is_error": result.get("is_error"),
         "terminal_reason": result.get("terminal_reason"), "cost_usd": result.get("total_cost_usd"),
-        "num_turns": result.get("num_turns"), "duration_ms": result.get("duration_ms"),
+        "num_turns": sum(r.get("num_turns") or 0 for r in results) if results else None,
+        "duration_ms": sum(r.get("duration_ms") or 0 for r in results) if results else None,
         "tokens": {name: sum(m.get(key, 0) for m in models) for name, key in TOKENS},
         "tools": dict(main), "subagent_tools": dict(sub), "skills": skills,
         "subagents": (result.get("subagent_stats") or {}).get("spawned", 0),
-        "denials": [d.get("tool_name") for d in result.get("permission_denials") or []],
+        "denials": [d.get("tool_name") for r in results for d in r.get("permission_denials") or []],
+        **context(events),
         "hints": hinted, "hint_uptake": uptake(hinted, main + sub, skills),
         "router_device": routed.get("device", ""), "router_ms": routed.get("latency_ms"),
         # the hook passes the session id; a record without one is the model calling `route` itself
         "model_route_calls": sum(1 for d in decisions if not d.get("session")),
     }
+
+
+def context(events: list[dict]) -> dict:
+    """The main agent's context per API call (input plus cached tokens): at the first call and at its peak, and
+    roughly how much of it tool output fills (characters / 4). Subagents have their own context and are left out."""
+    seen: set[str] = set()
+    sizes: list[int] = []
+    tool_chars = 0
+    for event in events:
+        if event.get("parent_tool_use_id"):
+            continue
+        message = event.get("message") or {}
+        if event.get("type") == "assistant" and message.get("usage") and message.get("id") not in seen:
+            seen.add(message.get("id"))
+            u = message["usage"]
+            sizes.append(sum(u.get(k) or 0 for k in ("input_tokens", "cache_read_input_tokens",
+                                                     "cache_creation_input_tokens")))
+        blocks = message.get("content") if event.get("type") == "user" else None
+        for block in blocks if isinstance(blocks, list) else []:
+            if isinstance(block, dict) and block.get("type") == "tool_result":
+                body = block.get("content")
+                tool_chars += len(body) if isinstance(body, str) else sum(
+                    len(part.get("text", "")) for part in body or [] if isinstance(part, dict))
+    return {"context_first": sizes[0] if sizes else None, "context_peak": max(sizes, default=None),
+            "tool_output_tokens": tool_chars // 4}
 
 
 def arm_problem(arm: str, init: dict, routed: bool) -> str:

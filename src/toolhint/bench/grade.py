@@ -41,7 +41,10 @@ def grade(task: Task, workspace: Path, run_dir: Path, judge_model: str | None, c
             present = bool(output.strip())
         score = checks["passed"] / checks["total"] if present else 0.0
         detail = {"output_exists": path.is_file(), "words": len(output.split()), **checks}
-    verdict = judge(task, output, judge_model, run_dir / "judge", claude_bin) if judge_model else None
+    verdict = None
+    if judge_model:  # nothing to read is the lowest grade, not a missing one that averages would skip
+        verdict = (judge(task, output, judge_model, run_dir / "judge", claude_bin) if output.strip()
+                   else {"score": 1, "reason": "no output", "cost_usd": 0.0})
     return {"score": round(score, 3), "detail": detail, "judge": verdict}
 
 

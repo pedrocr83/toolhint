@@ -2,11 +2,18 @@
   "prompt": "prompt.md",
   "budget_usd": 6,
   "timeout_s": 1800,
-  "allowed_tools": ["Bash(python3:*)", "Bash(python:*)", "Bash(pytest:*)"],
+  "allowed_tools": [
+    "Bash(python3:*)",
+    "Bash(python:*)",
+    "Bash(pytest:*)"
+  ],
   "grading": {
     "kind": "tests",
+    "output": "expenses.py",
     "hidden": "hidden/test_acceptance.py",
     "judge_reference": "reference.md",
-    "judge_files": ["**/*.py"]
+    "judge_files": [
+      "**/*.py"
+    ]
   }
 }

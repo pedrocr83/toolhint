@@ -16,6 +16,10 @@ from .report import render
 from .session import clean_env, command, prepare_workspace, run
 
 RUNS_DIR = TASKS_DIR.parent / "runs"
+# A headless session has nobody to approve a plan or answer a question, so a run that stops without its output
+# gets the nudge a user would give. Both arms get the same text, and the report counts how often it was needed.
+FOLLOW_UP = "Go ahead and do it now with your best judgment; I won't be around to answer questions."
+MAX_FOLLOW_UPS = 2
 
 
 def parser() -> argparse.ArgumentParser:
@@ -44,8 +48,17 @@ def run_one(task: Task, arm: str, rep: int, run_dir: Path, args: argparse.Namesp
     run_dir.mkdir(parents=True, exist_ok=True)
     workspace = prepare_workspace(task, run_dir)
     decisions = run_dir / "decisions.jsonl"
+    sent = 0
+
+    def follow_up() -> str | None:
+        nonlocal sent
+        if sent >= MAX_FOLLOW_UPS or (workspace / task.grading["output"]).exists():
+            return None
+        sent += 1
+        return FOLLOW_UP
+
     session = run(command(task, arm, args.model, args.claude), workspace, clean_env(os.environ, decisions),
-                  task.prompt, args.warmup, task.timeout_s, run_dir / "stderr.log")
+                  task.prompt, args.warmup, task.timeout_s, run_dir / "stderr.log", follow_up)
     (run_dir / "events.jsonl").write_text("".join(json.dumps(e) + "\n" for e in session["events"]), encoding="utf-8")
     metrics = summarize(arm, session["events"], list(read_jsonl(decisions)) if decisions.exists() else [])
     if session["timed_out"]:
@@ -53,6 +66,7 @@ def run_one(task: Task, arm: str, rep: int, run_dir: Path, args: argparse.Namesp
     judge_model = None if args.judge_model == "none" else args.judge_model
     return {"task": task.name, "arm": arm, "rep": rep, "model": args.model, **metrics,
             "timed_out": session["timed_out"], "exit_code": session["exit_code"], "wall_s": session["wall_s"],
+            "followups": session["followups"],
             "grade": grade(task, workspace, run_dir, judge_model, args.claude)}
 
 
@@ -63,12 +77,18 @@ def write_report(out: Path) -> Path:
 
 
 def regrade(out: Path) -> Path:
-    """Deterministic grading only, so a fixed checklist rescores old runs at no model cost."""
+    """Grading and metrics again from what each run saved, at no model cost; judge scores are kept."""
     path = out / "results.jsonl"
     records = list(read_jsonl(path))
     tasks = {task.name: task for task in load_tasks(",".join(sorted({r["task"] for r in records})))}
     for record in records:
         run_dir = out / record["task"] / f"{record['arm']}-{record['rep']}"
+        if (run_dir / "events.jsonl").exists():
+            decisions = run_dir / "decisions.jsonl"
+            record.update(summarize(record["arm"], list(read_jsonl(run_dir / "events.jsonl")),
+                                    list(read_jsonl(decisions)) if decisions.exists() else []))
+            if record.get("timed_out"):
+                record.update(valid=False, invalid_reason=f"timed out after {tasks[record['task']].timeout_s} s")
         graded = grade(tasks[record["task"]], run_dir / "workspace", run_dir, None)
         record["grade"] = {**graded, "judge": record["grade"].get("judge")}
     if not (out / "results.jsonl.bak").exists():  # keep the first backup: it holds the original grades

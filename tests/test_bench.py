@@ -103,11 +103,10 @@ def test_workspace_gets_the_starting_files_but_not_the_graders(tmp_path):
 
 FAKE_CLAUDE = """import json, sys, time
 print(json.dumps({"type": "system", "subtype": "init", "session_id": "s1"}), flush=True)
-line = sys.stdin.readline()
-if "hang" in line:
-    time.sleep(60)
-print(json.dumps({"type": "result", "subtype": "success", "result": json.loads(line)["message"]["content"]}), flush=True)
-sys.stdin.read()
+for line in sys.stdin:
+    if "hang" in line:
+        time.sleep(60)
+    print(json.dumps({"type": "result", "subtype": "success", "result": json.loads(line)["message"]["content"]}), flush=True)
 """
 
 
@@ -173,11 +172,13 @@ def test_regrade_rescores_saved_workspaces_and_keeps_the_judge(tmp_path):
     (workspace / "BRIEF.md").write_text("## Recommendation\n\nSign RouteLoom by 15 July [05].")
     old = {**record("on", 1, 0.0, 1.0), "task": "research-local"}
     old["grade"]["judge"] = {"score": 5}
+    call = {"type": "assistant", "message": {"id": "m1", "usage": usage(1, 2, 3), "content": []}}
+    (workspace.parent / "events.jsonl").write_text("\n".join(json.dumps(e) for e in [init(), call, RESULT]) + "\n")
     (tmp_path / "results.jsonl").write_text(json.dumps(old) + "\n")
     assert main(["--regrade", str(tmp_path)]) == 0
     [new] = [json.loads(line) for line in (tmp_path / "results.jsonl").read_text().splitlines()]
     assert new["grade"]["detail"]["checks"]["recommends_routeloom"] and new["grade"]["score"] > 0
-    assert new["grade"]["judge"] == {"score": 5}
+    assert new["grade"]["judge"] == {"score": 5} and new["context_first"] == 6
     assert (tmp_path / "report.md").exists()
     main(["--regrade", str(tmp_path)])
     [kept] = [json.loads(line) for line in (tmp_path / "results.jsonl.bak").read_text().splitlines()]
@@ -188,3 +189,36 @@ def test_sessions_cannot_install_packages():
     cmd = command(TASK, "on", "sonnet")
     denied = cmd[cmd.index("--disallowedTools") + 1:cmd.index("--allowedTools")]
     assert {"Bash(pip:*)", "Bash(python3 -m pip:*)", "Bash(uv pip:*)", "Bash(npm install:*)"} <= set(denied)
+
+
+def test_run_sends_follow_ups_while_the_callback_returns_text(tmp_path):
+    fake = tmp_path / "claude.py"
+    fake.write_text(FAKE_CLAUDE)
+    replies = iter(["go ahead", None])
+    out = run([sys.executable, str(fake)], tmp_path, None, "hello", 0, 10, tmp_path / "err.log", lambda: next(replies))
+    assert [e["result"] for e in out["events"] if e["type"] == "result"] == ["hello", "go ahead"]
+    assert out["followups"] == 1 and not out["timed_out"]
+
+
+def usage(total_input, cache_read, cache_write):
+    return {"input_tokens": total_input, "cache_read_input_tokens": cache_read, "cache_creation_input_tokens": cache_write}
+
+
+def test_summarize_adds_up_turns_and_measures_context():
+    first = {"type": "assistant", "message": {"id": "m1", "usage": usage(10, 0, 40000), "content": [
+        {"type": "tool_use", "id": "t1", "name": "Read", "input": {}}]}}
+    result_block = {"type": "tool_result", "tool_use_id": "t1", "content": "x" * 4000}
+    tool_result = {"type": "user", "parent_tool_use_id": None, "message": {"content": [result_block]}}
+    later = {"type": "assistant", "message": {"id": "m2", "usage": usage(5, 40000, 1200), "content": []}}
+    sub = {"type": "assistant", "parent_tool_use_id": "t9", "message": {"id": "m3", "usage": usage(1, 0, 90000),
+                                                                           "content": []}}
+    results = [{**RESULT, "num_turns": 3, "permission_denials": [{"tool_name": "Bash"}]},
+               {**RESULT, "num_turns": 2, "permission_denials": [{"tool_name": "WebFetch"}]}]
+    m = summarize("off", [init(plugins=(), connected=False), first, tool_result, later, sub, *results], [])
+    assert m["num_turns"] == 5 and m["denials"] == ["Bash", "WebFetch"]
+    assert (m["context_first"], m["context_peak"], m["tool_output_tokens"]) == (40010, 41205, 1000)
+
+
+def test_large_numbers_read_as_thousands():
+    from toolhint.bench.report import stat
+    assert stat([39882.0, 39912.0]) == "39,897 ± 21 (2)" and stat([0.5]) == "0.5 (1)"

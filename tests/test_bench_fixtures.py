@@ -86,3 +86,13 @@ def test_the_spreadsheet_workspace_gets_real_copies_of_the_shared_sources(tmp_pa
     workspace = prepare_workspace(task("spreadsheet"), tmp_path / "run")
     source = workspace / "sources" / "03-vendor-quotes.md"
     assert source.is_file() and not source.is_symlink() and not (workspace / "sources").is_symlink()
+
+
+def test_a_missing_output_scores_the_judge_minimum_without_calling_it(tmp_path):
+    (tmp_path / "workspace").mkdir()
+    verdict = grade(task("research-local"), tmp_path / "workspace", tmp_path, "sonnet", claude_bin="/nonexistent/claude")
+    assert verdict["score"] == 0.0 and verdict["judge"]["score"] == 1
+
+
+def test_every_task_names_the_output_that_shows_it_is_done():
+    assert all(loaded.grading.get("output") for loaded in load_tasks("all"))

@@ -14,6 +14,10 @@ ROWS: tuple[tuple[str, Callable[[dict], float | None]], ...] = (
     ("output tokens", lambda r: r["tokens"]["output"]),
     ("cache read tokens", lambda r: r["tokens"]["cache_read"]),
     ("cache write tokens", lambda r: r["tokens"]["cache_creation"]),
+    ("context at first call (tokens)", lambda r: r.get("context_first")),
+    ("peak context (tokens)", lambda r: r.get("context_peak")),
+    ("tool output in context (~tokens)", lambda r: r.get("tool_output_tokens")),
+    ("follow-ups needed", lambda r: r.get("followups")),
     ("turns", lambda r: r["num_turns"]),
     ("minutes", lambda r: r["wall_s"] / 60),
     ("tool calls", lambda r: sum(r["tools"].values()) + sum(r["subagent_tools"].values())),
@@ -28,8 +32,12 @@ def stat(values: list[float | None]) -> str:
     if not values:
         return "–"
     mean = statistics.fmean(values)
-    spread = f" ± {statistics.stdev(values):.2g}" if len(values) > 1 else ""
-    return f"{mean:.3g}{spread} ({len(values)})"
+    spread = f" ± {shown(statistics.stdev(values), 2)}" if len(values) > 1 else ""
+    return f"{shown(mean, 3)}{spread} ({len(values)})"
+
+
+def shown(value: float, digits: int) -> str:
+    return f"{value:,.0f}" if abs(value) >= 1000 else f"{value:.{digits}g}"
 
 
 def tally(runs: list[dict], pick: Callable[[dict], list[str]], top: int = 8) -> str:

@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import json
+import queue
 import shutil
 import subprocess
 import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from . import Task
@@ -51,10 +52,11 @@ def prepare_workspace(task: Task, run_dir: Path) -> Path:
 
 
 def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: str, warmup_s: float,
-        timeout_s: float, stderr_path: Path) -> dict:
-    """Start the session, give the router time to load, send the prompt, and read until the result or the timeout."""
+        timeout_s: float, stderr_path: Path, followup: Callable[[], str | None] | None = None) -> dict:
+    """Start the session, give the router time to load, send the prompt, and read until a result. After each result,
+    `followup` may return another message for the same session; the timeout covers all turns."""
     events: list[dict] = []
-    ended = threading.Event()
+    signals: queue.Queue[str] = queue.Queue()
     with stderr_path.open("w", encoding="utf-8") as stderr:
         proc = subprocess.Popen(list(cmd), cwd=cwd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=stderr, text=True)
@@ -67,22 +69,39 @@ def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: st
                     continue
                 events.append(event)
                 if event.get("type") == "result":
-                    ended.set()
-            ended.set()  # end of output without a result: the session crashed or exited
+                    signals.put("result")
+            signals.put("eof")  # end of output: the session exited or crashed
 
-        reader = threading.Thread(target=read, daemon=True)
-        reader.start()
-        died_early = ended.wait(warmup_s)
-        started = time.monotonic()
-        if not died_early:
+        def send(text: str) -> None:
             try:
-                proc.stdin.write(json.dumps({"type": "user", "message": {"role": "user", "content": prompt}}) + "\n")
+                proc.stdin.write(json.dumps({"type": "user", "message": {"role": "user", "content": text}}) + "\n")
                 proc.stdin.flush()
             except OSError:
                 pass
-        finished = ended.wait(timeout_s)
+
+        reader = threading.Thread(target=read, daemon=True)
+        reader.start()
+        started = time.monotonic()
+        timed_out, followups = False, 0
+        try:
+            signals.get(timeout=warmup_s)  # only a crash signals before the prompt
+        except queue.Empty:
+            started = time.monotonic()
+            deadline = started + timeout_s
+            send(prompt)
+            while True:
+                try:
+                    signal = signals.get(timeout=max(0.0, deadline - time.monotonic()))
+                except queue.Empty:
+                    timed_out = True
+                    break
+                text = followup() if signal == "result" and followup else None
+                if not text:
+                    break
+                followups += 1
+                send(text)
         wall_s = time.monotonic() - started
-        if not finished:
+        if timed_out:
             proc.kill()
         try:
             proc.stdin.close()
@@ -94,4 +113,5 @@ def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: st
             proc.kill()
             proc.wait()
         reader.join(timeout=5)
-    return {"events": events, "timed_out": not finished, "exit_code": proc.returncode, "wall_s": round(wall_s, 1)}
+    return {"events": events, "timed_out": timed_out, "exit_code": proc.returncode, "wall_s": round(wall_s, 1),
+            "followups": followups}
