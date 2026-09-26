@@ -11,7 +11,8 @@ from .catalog import COWORK_ROOT, connector_of, load_json, session_json_for
 
 TAG_BLOCK = re.compile(r"<([a-zA-Z_-]+)>.*?</\1>", re.DOTALL)
 MAX_PROMPT = 2000
-TAIL_BYTES = 256 * 1024
+TAIL_BYTES = 4 * 1024 * 1024  # tool results grow transcripts fast; the earlier prompt is often ~1 MB back
+INTERRUPTED = "[Request interrupted by user"
 
 
 def read_jsonl(path: Path) -> Iterator[dict]:
@@ -30,8 +31,9 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def prompt_text(entry: dict) -> str | None:
-    """Text of a real user prompt; None for tool results, meta, sidechain and slash-command entries."""
-    if entry.get("type") != "user" or entry.get("isMeta") or entry.get("isSidechain"):
+    """Text of a real user prompt; None for tool results, meta, sidechain, slash-command, compaction-summary
+    and interrupt-marker entries."""
+    if entry.get("type") != "user" or entry.get("isMeta") or entry.get("isSidechain") or entry.get("isCompactSummary"):
         return None
     content = (entry.get("message") or {}).get("content")
     if isinstance(content, list):
@@ -39,7 +41,7 @@ def prompt_text(entry: dict) -> str | None:
             return None
         content = " ".join(block.get("text", "") for block in content
                            if isinstance(block, dict) and block.get("type") == "text")
-    if not isinstance(content, str) or "<command-name>" in content:
+    if not isinstance(content, str) or "<command-name>" in content or content.startswith(INTERRUPTED):
         return None
     return TAG_BLOCK.sub(" ", content).strip()[:MAX_PROMPT] or None
 

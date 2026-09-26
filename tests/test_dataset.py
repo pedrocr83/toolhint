@@ -82,3 +82,16 @@ def test_previous_prompt_reads_only_the_tail_and_fails_open(tmp_path):
     assert previous_prompt(str(path), "now", tail_bytes=2048) == ""
     assert previous_prompt(str(tmp_path / "missing.jsonl"), "now") == ""
     assert previous_prompt("", "now") == ""
+
+
+def test_prompt_text_skips_compaction_summaries_and_interrupt_markers():
+    assert prompt_text(user("This session is being continued from a previous conversation", isCompactSummary=True)) is None
+    assert prompt_text(user([{"type": "text", "text": "[Request interrupted by user]"}])) is None
+    assert prompt_text(user([{"type": "text", "text": "[Request interrupted by user for tool use]"}])) is None
+
+
+def test_previous_prompt_reaches_past_large_tool_results(tmp_path):
+    path = tmp_path / "s.jsonl"
+    big = {"type": "user", "message": {"content": [{"type": "tool_result", "content": "x" * 1_000_000}]}}
+    write(path, [user("refactor the auth module"), assistant(("Read", {})), big, user("ok do it")])
+    assert previous_prompt(str(path), "ok do it") == "refactor the auth module"

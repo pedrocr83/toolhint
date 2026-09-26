@@ -16,7 +16,7 @@ from mcp.server.mcpserver import MCPServer
 from . import __version__, catalog
 from .dataset import previous_prompt
 from .decisions import DEFAULT_LOG, DecisionLog
-from .engine import PLURAL, SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint
+from .engine import PLURAL, SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint, prompt_view
 from .items import Item, Ranking, RouteContext
 
 log = logging.getLogger("toolhint.server")
@@ -64,7 +64,7 @@ class RouterService:
             return ""
         try:
             items = self._discover(ctx)
-            short = len(ctx.prompt.strip()) < SHORT_PROMPT_CHARS
+            short = len(prompt_view(ctx.prompt)) < SHORT_PROMPT_CHARS  # the length the engine checks
             ranking = engine.rank(ctx.prompt, items, previous_prompt(ctx.transcript_path, ctx.prompt) if short else "")
             hint = format_hint(self._unseen(ctx.session_id, ranking))
         except Exception:

@@ -154,3 +154,14 @@ def test_hint_memory_keeps_at_most_64_sessions():
         svc.route(RouteContext(f"please debug failing test number {i}", session_id=f"s{i}"))
     assert svc.route(RouteContext("debug the other failing test", session_id="s0")) == HINT
     assert svc.route(RouteContext("debug the other failing test again", session_id="s64")) == ""
+
+
+def test_short_follow_ups_with_tag_blocks_get_the_earlier_prompt(tmp_path):
+    transcript = tmp_path / "s.jsonl"
+    transcript.write_text(json.dumps({"type": "user", "message": {"content": "refactor the auth module"}}) + "\n")
+    scorer = FakeScorer()
+    svc = RouterService(lambda: Engine(scorer), discover=lambda ctx: ITEMS)
+    svc.load()
+    selection = "<ide_selection>" + "def login(user): ...\n" * 10 + "</ide_selection>"
+    svc.route(RouteContext(selection + " and the unit tests?", transcript_path=str(transcript)))
+    assert scorer.choose_calls[-1][0].get("earlier request") == "refactor the auth module"
