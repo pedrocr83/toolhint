@@ -153,3 +153,8 @@ def test_dry_run_lists_every_run_without_starting_one(capsys):
     assert [line.split(":")[0] for line in lines[:4]] == ["rep 1 research-local on", "rep 1 research-local off",
                                                          "rep 2 research-local off", "rep 2 research-local on"]
     assert "--settings" in lines[1] and "--settings" not in lines[0] and "4 runs" in lines[4]
+
+
+def test_the_router_log_path_is_absolute_because_the_router_runs_inside_the_workspace(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    assert clean_env({}, Path("runs/d.jsonl"))["TOOLHINT_LOG"] == str(tmp_path / "runs" / "d.jsonl")

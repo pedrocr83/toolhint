@@ -32,7 +32,8 @@ def command(task: Task, arm: str, model: str, claude_bin: str = "claude") -> lis
 
 def clean_env(base: Mapping[str, str], decisions: Path) -> dict[str, str]:
     env = {key: value for key, value in base.items() if not key.startswith(PARENT_PREFIXES) and key not in PARENT_FLAGS}
-    env["TOOLHINT_LOG"] = str(decisions)  # the router inherits it, so each run keeps its own decision records
+    # the router inherits it and runs inside the workspace, so the path must be absolute
+    env["TOOLHINT_LOG"] = str(decisions.resolve())
     return env
 
 
