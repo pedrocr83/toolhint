@@ -10,7 +10,7 @@ laya-router warmup            # downloads the checkpoint, snapshots MCP tools, c
 claude plugin marketplace add "$PWD"
 claude plugin install laya-router@layla
 ```
-- **Cowork:** build the zip with `mkdir -p dist && (cd plugin && zip -r ../dist/laya-router-plugin.zip .)`, then upload it under Customize › Plugins › Upload. This works in local sessions only.
+- **Cowork:** build the zip with `mkdir -p dist && (cd plugin && zip -r ../dist/laya-router-plugin.zip .)`, then upload it under Customize › Plugins › Upload. It only works when Cowork runs the task on this computer. Where Cowork runs tasks in Anthropic's cloud (the merged Claude experience, or no local VM support), the plugin cannot reach the local router and gives no hints.
 - **Gemini, Cursor, VS Code:** merge the matching file from `snippets/`.
 
 ## What to expect
