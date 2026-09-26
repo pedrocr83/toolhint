@@ -12,9 +12,9 @@ from mcp import Client, StdioServerParameters
 
 from .catalog import enabled_plugin_paths, load_json
 
-log = logging.getLogger("laya_router.toolcache")
+log = logging.getLogger("toolhint.toolcache")
 TIMEOUT_S = 30
-SELF_PLUGIN = "laya-router"
+SELF_PLUGIN = "toolhint"
 
 
 def server_configs(data: dict) -> dict:

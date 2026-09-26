@@ -1,1 +1,1 @@
-{"servers": {"laya-router": {"type": "stdio", "command": "laya-router", "args": ["serve"]}}}
+{"servers": {"toolhint": {"type": "stdio", "command": "toolhint", "args": ["serve"]}}}

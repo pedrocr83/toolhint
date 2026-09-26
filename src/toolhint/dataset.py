@@ -116,7 +116,7 @@ def build(home: Path, out_dir: Path) -> dict[str, int]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="laya-router eval build")
+    parser = argparse.ArgumentParser(prog="toolhint eval build")
     parser.add_argument("--out", default="eval/data")
     args = parser.parse_args(argv)
     print(json.dumps(build(Path.home(), Path(args.out))))

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .items import Ranking, RouteContext
 
-DEFAULT_LOG = Path.home() / ".local" / "state" / "laya-router" / "decisions.jsonl"
+DEFAULT_LOG = Path.home() / ".local" / "state" / "toolhint" / "decisions.jsonl"
 MAX_BYTES = 10 * 1024 * 1024
 PROMPT_CHARS = 500
 

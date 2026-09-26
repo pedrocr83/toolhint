@@ -27,4 +27,4 @@ def test_plugin_has_no_top_level_bin():
 
 def test_marketplace_points_at_plugin():
     [entry] = load(".claude-plugin/marketplace.json")["plugins"]
-    assert (entry["name"], entry["source"]) == ("laya-router", "./plugin")
+    assert (entry["name"], entry["source"]) == ("toolhint", "./plugin")

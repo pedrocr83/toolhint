@@ -1,6 +1,6 @@
-from laya_router.engine import NONE_ID
-from laya_router.evaluate import bm25_method, calibrate, canonical_ids, evaluate, gate_lines, none_rate, pick_tau
-from laya_router.items import Item
+from toolhint.engine import NONE_ID
+from toolhint.evaluate import bm25_method, calibrate, canonical_ids, evaluate, gate_lines, none_rate, pick_tau
+from toolhint.items import Item
 
 KNOWN = {"claude-code": {"skill": {"x", "y", "z", "w"}, "connector": set(), "tool": set()}}
 

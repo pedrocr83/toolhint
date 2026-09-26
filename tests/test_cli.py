@@ -2,8 +2,8 @@ import json
 
 from fakes import FakeScorer
 
-from laya_router import cli
-from laya_router.engine import Engine
+from toolhint import cli
+from toolhint.engine import Engine
 
 
 def test_catalog_prints_counts(tmp_path, monkeypatch, capsys, write_skill):
@@ -18,10 +18,10 @@ def test_route_prints_hint(tmp_path, monkeypatch, capsys, write_skill):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.chdir(tmp_path)
     write_skill(tmp_path / ".claude" / "skills", "debugging")
-    monkeypatch.setattr("laya_router.server.default_engine",
+    monkeypatch.setattr("toolhint.server.default_engine",
                         lambda env=None: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
     assert cli.main(["route", "please debug the failing test"]) == 0
-    assert capsys.readouterr().out.startswith("[laya-router] advisory")
+    assert capsys.readouterr().out.startswith("[toolhint] advisory")
 
 
 def test_eval_build_runs_on_empty_home(tmp_path, monkeypatch, capsys):
@@ -42,6 +42,6 @@ def test_catalog_refresh_never_runs_a_projects_mcp_json(tmp_path, monkeypatch):
         spawned.extend(servers)
         return {"servers": []}
 
-    monkeypatch.setattr("laya_router.toolcache.refresh", fake_refresh)
+    monkeypatch.setattr("toolhint.toolcache.refresh", fake_refresh)
     assert cli.main(["catalog", "--refresh"]) == 0
     assert spawned == []

@@ -252,7 +252,7 @@ def load_inputs(args: argparse.Namespace) -> Inputs:
 
 
 def parse(argv: list[str] | None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="laya-router eval run")
+    parser = argparse.ArgumentParser(prog="toolhint eval run")
     parser.add_argument("--data", default="eval/data")
     parser.add_argument("--synthetic", default="eval/synthetic.jsonl")
     parser.add_argument("--natural", default="eval/natural.jsonl")

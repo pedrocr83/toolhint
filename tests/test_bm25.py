@@ -1,4 +1,4 @@
-from laya_router.bm25 import BM25, tokens
+from toolhint.bm25 import BM25, tokens
 
 
 def test_tokens_fold_accents_drop_stopwords_and_split_long_words():

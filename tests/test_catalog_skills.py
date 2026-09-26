@@ -1,6 +1,6 @@
 import json
 
-from laya_router.catalog import claude_code_skills, cowork_skills, one_line, scan_commands, scan_skills
+from toolhint.catalog import claude_code_skills, cowork_skills, one_line, scan_commands, scan_skills
 
 
 def test_one_line_takes_first_sentence_and_truncates():

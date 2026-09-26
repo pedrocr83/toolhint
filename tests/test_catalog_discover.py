@@ -1,9 +1,9 @@
 import json
 
-from laya_router.catalog import (
+from toolhint.catalog import (
     claude_ai_items, connector_items, connector_of, discover, harness_catalogs, local_server_items, session_json_for,
 )
-from laya_router.items import RouteContext
+from toolhint.items import RouteContext
 
 CAL = {"remoteMcpServersConfig": [{"name": "Google Calendar", "instructions": "", "tools": [
     {"name": "create_event", "description": "Creates an event on the given calendar."}]}]}
@@ -17,7 +17,7 @@ def test_claude_ai_items_use_claude_code_tool_ids():
 
 
 def test_local_server_items_from_tool_cache(tmp_path):
-    cache = tmp_path / ".cache" / "laya-router" / "mcp-tools.json"
+    cache = tmp_path / ".cache" / "toolhint" / "mcp-tools.json"
     cache.parent.mkdir(parents=True)
     cache.write_text(json.dumps({"servers": [
         {"name": "context7", "plugin": None, "instructions": "", "tools": [{"name": "query-docs", "description": "Query docs."}]},

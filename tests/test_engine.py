@@ -1,7 +1,7 @@
 from fakes import FakeScorer
 
-from laya_router.engine import NONE_ID, Engine, EngineConfig, option_keys, should_skip
-from laya_router.items import Item
+from toolhint.engine import NONE_ID, Engine, EngineConfig, option_keys, should_skip
+from toolhint.items import Item
 
 K2 = EngineConfig(k={"skill": 2, "connector": 15, "tool": 10})
 PROMPT = "please debug the failing test"
@@ -137,7 +137,7 @@ def test_head_budget_overflow_halves_shortlists():
 
 
 def test_config_from_env():
-    cfg = EngineConfig.from_env({"LAYA_ROUTER_K_SKILL": "7", "LAYA_ROUTER_TAU": "0.6"})
+    cfg = EngineConfig.from_env({"TOOLHINT_K_SKILL": "7", "TOOLHINT_TAU": "0.6"})
     assert cfg.k == {"skill": 7, "connector": 5, "tool": 5}
     assert cfg.tau == {"skill": 0.6, "connector": 0.6, "tool": 0.6}
     assert EngineConfig().tau == {"skill": 0.5, "connector": 0.6, "tool": 0.5}

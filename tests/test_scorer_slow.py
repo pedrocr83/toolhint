@@ -1,7 +1,7 @@
 import pytest
 
-from laya_router.engine import NONE_ID, Engine
-from laya_router.items import Item
+from toolhint.engine import NONE_ID, Engine
+from toolhint.items import Item
 
 pytestmark = pytest.mark.slow
 
@@ -16,7 +16,7 @@ ITEMS = [
 
 
 def test_laya_scorer_returns_a_distribution_over_options():
-    from laya_router.scorer import LayaScorer
+    from toolhint.scorer import LayaScorer
 
     scores = Engine(LayaScorer()).scores("my pytest suite fails with a KeyError after the refactor", ITEMS)
     assert {item_id for item_id, _ in scores["skill"]} == {i.id for i in ITEMS} | {NONE_ID}

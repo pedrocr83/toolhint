@@ -1,4 +1,4 @@
-"""laya-router command line: serve | route | catalog | warmup | eval."""
+"""toolhint command line: serve | route | catalog | warmup | eval."""
 from __future__ import annotations
 
 import argparse
@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="laya-router", description="Local Laya routing hints for agent harnesses")
+    parser = argparse.ArgumentParser(prog="toolhint", description="Local Laya routing hints for agent harnesses")
     sub = parser.add_subparsers(required=True)
     sub.add_parser("serve", help="run the MCP stdio server").set_defaults(func=cmd_serve)
     route = sub.add_parser("route", help="rank one prompt and print the hint")

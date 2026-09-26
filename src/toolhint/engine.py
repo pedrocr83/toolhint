@@ -13,7 +13,7 @@ import numpy as np
 from .bm25 import BM25
 from .items import KINDS, Candidate, Item, Ranking
 
-log = logging.getLogger("laya_router.engine")
+log = logging.getLogger("toolhint.engine")
 NONE_ID = "none"
 NONE_LABEL = "no specialized skill or tool needed; general request"
 MAX_PROMPT_CHARS = 2000
@@ -45,12 +45,12 @@ class EngineConfig:
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> EngineConfig:
         k, tau = dict(DEFAULT_K), dict(DEFAULT_TAU)
-        if env.get("LAYA_ROUTER_K_SKILL"):
-            k["skill"] = int(env["LAYA_ROUTER_K_SKILL"])
-        if env.get("LAYA_ROUTER_K_TOOL"):
-            k["tool"] = int(env["LAYA_ROUTER_K_TOOL"])
-        if env.get("LAYA_ROUTER_TAU"):
-            tau = dict.fromkeys(tau, float(env["LAYA_ROUTER_TAU"]))
+        if env.get("TOOLHINT_K_SKILL"):
+            k["skill"] = int(env["TOOLHINT_K_SKILL"])
+        if env.get("TOOLHINT_K_TOOL"):
+            k["tool"] = int(env["TOOLHINT_K_TOOL"])
+        if env.get("TOOLHINT_TAU"):
+            tau = dict.fromkeys(tau, float(env["TOOLHINT_TAU"]))
         return cls(k=k, tau=tau)
 
 
@@ -173,7 +173,7 @@ class Engine:
                 for item_id, p in keep[: self.cfg.cap[kind]]]
 
 
-PREFIX = "[laya-router] advisory, ignore if irrelevant — "
+PREFIX = "[toolhint] advisory, ignore if irrelevant — "
 MAX_HINT_CHARS = 400
 
 

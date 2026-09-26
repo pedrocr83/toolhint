@@ -1,1 +1,1 @@
-{"mcpServers": {"router": {"command": "laya-router", "args": ["serve"]}}}
+{"mcpServers": {"router": {"command": "toolhint", "args": ["serve"]}}}

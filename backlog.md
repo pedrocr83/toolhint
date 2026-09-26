@@ -77,7 +77,7 @@ Themes group the items; the roadmap orders them.
 
 ## REL: Release prep
 
-- [ ] **REL-1 · Rename the project · M · Now**
+- [x] **REL-1 · Rename the project · M · Now**
   - **Do:**
     - Pick the name. Recommended: `toolhint`; the alternative is `hunch-router`. Both are unused on GitHub and free on PyPI.
     - Rename in one commit:
@@ -93,7 +93,7 @@ Themes group the items; the roadmap orders them.
 - [ ] **REL-2 · Remove private data before going public · S · Now**
   - `eval/synthetic.jsonl` contains 6 lines with real Cowork connector UUIDs. Git history keeps them, so either scrub the history or publish a fresh single squashed commit.
   - Optionally rewrite the commit author email to the GitHub noreply address.
-- [ ] **REL-3 · Merge `feat/laya-router`** into `main`. The decision is still open. · S · Now
+- [x] **REL-3 · Merge `feat/laya-router`** into `main`. Done 2026-09-26 (fast-forward). · S · Now
 - [ ] **REL-4 · Publish the repo · S · Now**
   - Run `gh auth login`.
   - Write a description that mentions Laya, and add the topics `laya`, `claude-code`, `mcp` and `agent-skills`.
@@ -102,7 +102,7 @@ Themes group the items; the roadmap orders them.
 
 - [ ] **RT-1 · Allow more than one pick per kind · S + M · Now**
   - **Problem:**
-    - [engine.py:171](src/laya_router/engine.py#L171) keeps items with `p ≥ τ`, and Laya's choice is one softmax whose probabilities add up to 1. With τ at 0.5 or 0.6, at most one item per kind can ever pass, so the caps of 3/2/3 never matter.
+    - [engine.py:171](src/toolhint/engine.py#L171) keeps items with `p ≥ τ`, and Laya's choice is one softmax whose probabilities add up to 1. With τ at 0.5 or 0.6, at most one item per kind can ever pass, so the caps of 3/2/3 never matter.
     - When two items are relevant, they split the probability and both can miss τ.
   - **Do:**
     - First measure how many eval turns have two or more correct items.
@@ -128,7 +128,7 @@ Themes group the items; the roadmap orders them.
   - **Do:** log the device with every decision. On a fallback, reload on the GPU or report a degraded state (SEC-4). RUN-1 makes it much less likely.
 - [ ] **RT-4 · Give Laya a better view of the prompt · S · Now**
   - **Do:**
-    - Keep the start and the end of long prompts instead of only the first 2000 characters ([engine.py:140](src/laya_router/engine.py#L140)). A pasted log with the question at the end currently loses the question.
+    - Keep the start and the end of long prompts instead of only the first 2000 characters ([engine.py:140](src/toolhint/engine.py#L140)). A pasted log with the question at the end currently loses the question.
     - Strip fenced code, pasted logs and `<system-reminder>` blocks.
     - When the prompt is under about 60 characters ("ok do it"), add the previous user prompt, read from `transcript_path`.
     - Optionally add `project: basename(cwd)`.
@@ -590,7 +590,7 @@ Add a model ranker only if replay shows it beats head+tail (CLN-6).
   - **Drop:**
     - meta, sidechain and compaction-summary messages;
     - command output;
-    - hook-injected text, including our own hints.
+    - hook-injected text, including our own hints (tagged `[toolhint]`, or `[laya-router]` in transcripts from before the rename).
   - **Deduplicate:** streamed messages.
   - **Add:** subagent transcripts (`<session>/subagents/*.jsonl`) as their own slice.
   - **Separate:** treat `/command` turns as the user's own choice and leave them out of the routing eval.
@@ -699,7 +699,7 @@ Add a model ranker only if replay shows it beats head+tail (CLN-6).
 - [ ] **HK-4** · `catalog --refresh` drops a failing server's cached tools; keep the last good snapshot. · S
 - [ ] **HK-5** · The engine is published before warm-up finishes, so the first call can still pay the cold start. · S
 - [ ] **HK-6** · The `eval build --out` default is relative to the current directory. · S
-- [ ] **HK-7** · There's no `LAYA_ROUTER_K_CONNECTOR`, and `LAYA_ROUTER_TAU` sets all three kinds at once; add per-kind variables. · S
+- [ ] **HK-7** · There's no `TOOLHINT_K_CONNECTOR`, and `TOOLHINT_TAU` sets all three kinds at once; add per-kind variables. · S
 - [ ] **HK-8** · numpy and anyio are used but not declared in `pyproject.toml`. · S
 - [ ] **HK-9** · `plan.md` Global Constraints still list the old defaults. · S
 
@@ -737,7 +737,7 @@ Each rule was learned from another project's failure.
 
 ## Already done (don't redo)
 
-- One batched `predict` call covers all three kinds ([engine.py:155](src/laya_router/engine.py#L155)).
+- One batched `predict` call covers all three kinds ([engine.py:155](src/toolhint/engine.py#L155)).
 - A lock around every model call, which covers the tokenizer thread-safety bug in 0.3.20.
 - Decisions use the per-option probabilities, not Laya's `confidence`.
 - Skipping prompts under 12 characters, `/` commands and repeats.

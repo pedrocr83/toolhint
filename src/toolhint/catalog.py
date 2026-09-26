@@ -18,7 +18,7 @@ import yaml
 from .bm25 import fold
 from .items import Item, Kind, RouteContext
 
-log = logging.getLogger("laya_router.catalog")
+log = logging.getLogger("toolhint.catalog")
 LABEL_CHARS = 80
 TEXT_CHARS = 1500
 COWORK_ROOT = Path(".config") / "Claude" / "local-agent-mode-sessions"
@@ -139,7 +139,7 @@ def cowork_skills(home: Path, session: dict) -> list[Item]:
     return items
 
 
-TOOL_CACHE = Path(".cache") / "laya-router" / "mcp-tools.json"
+TOOL_CACHE = Path(".cache") / "toolhint" / "mcp-tools.json"
 TTL_S = 30.0
 _CACHE: dict[tuple[str, ...], tuple[float, list[Item]]] = {}
 
@@ -188,7 +188,7 @@ def claude_ai_items(session: dict, cc_names: bool) -> list[Item]:
 
 
 def local_server_items(home: Path) -> list[Item]:
-    """Local MCP servers snapshotted by `laya-router catalog --refresh`."""
+    """Local MCP servers snapshotted by `toolhint catalog --refresh`."""
     items: list[Item] = []
     for server in load_json(home / TOOL_CACHE).get("servers") or []:
         if not isinstance(server, dict) or not server.get("name"):

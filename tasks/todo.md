@@ -164,3 +164,11 @@ Details are in `spike/FINDINGS.md` § Gate.
 - Final: minor (deferred): no timeout on LayaScorer lock — a hung forward pass makes every later prompt wait the 5 s hook timeout
 - Task 15: Ruling: Step 8 — VS Code not tested (user's check ran in the terminal CLI, entrypoint cli); Cowork unreachable: merged experience runs tasks in Anthropic's cloud (grantRemoteSessionFolders cse_…, workspace VM unsupported), so the plugin's local router cannot start — recorded in todo.md and README — cost if wrong: none
 - Task 15: Decision (user, 2026-09-26): finish this branch, then a time-boxed spike registering laya-router as a Desktop local MCP server (bridge shows "+0 local-mcp") to reach cloud Cowork sessions
+
+## Rename laya-router → toolhint (backlog REL-1, 2026-09-26)
+- [x] Tests expect the new names (RED: 12 × ModuleNotFoundError toolhint)
+- [x] `git mv src/laya_router src/toolhint`; rename ids, hint tag, env vars, paths, snippets (GREEN)
+- [x] README and backlog.md (links, REL-1 done, EV-3 note on the old `[laya-router]` tag)
+- [x] Suite, slow test and ruff as before; no stale names outside history docs (78 passed; slow 1 passed; ruff 5 = baseline)
+- [ ] Reinstall: plugin, uv tool, move decision log, delete old cache, warmup, live hint check
+- [ ] Rebuild the Cowork zip; fast-forward main

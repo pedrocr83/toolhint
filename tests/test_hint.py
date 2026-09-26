@@ -1,5 +1,5 @@
-from laya_router.engine import PREFIX, format_hint
-from laya_router.items import Candidate, Ranking
+from toolhint.engine import PREFIX, format_hint
+from toolhint.items import Candidate, Ranking
 
 
 def test_empty_ranking_formats_to_empty_string():

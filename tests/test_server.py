@@ -5,15 +5,15 @@ import pytest
 from fakes import FakeScorer
 from mcp import Client
 
-from laya_router.decisions import DecisionLog
-from laya_router.engine import NONE_ID, Engine
-from laya_router.items import Item, Ranking, RouteContext
-from laya_router.server import INSTRUCTIONS, RouterService, build_server, decision_log
+from toolhint.decisions import DecisionLog
+from toolhint.engine import NONE_ID, Engine
+from toolhint.items import Item, Ranking, RouteContext
+from toolhint.server import INSTRUCTIONS, RouterService, build_server, decision_log
 
 ITEMS = [Item("skill", "debugging", "debug failing tests", "debug failing tests"),
          Item("skill", "slides", "make slides", "make slides")]
 PROMPT = {"prompt": "please debug the failing test", "session_id": "s1"}
-HINT = "[laya-router] advisory, ignore if irrelevant — skills: debugging (0.90)"
+HINT = "[toolhint] advisory, ignore if irrelevant — skills: debugging (0.90)"
 
 
 def text_of(result) -> str:
@@ -102,8 +102,8 @@ def test_decision_log_rotates_and_can_be_disabled(tmp_path):
     log.write(RouteContext("x" * 50), Ranking(), 0)
     assert (tmp_path / "d.jsonl.1").exists() and len(path.read_text().splitlines()) == 1
     DecisionLog(None).write(RouteContext("x"), Ranking(), 0)
-    assert decision_log({"LAYA_ROUTER_LOG": "off"}).path is None
-    assert decision_log({"LAYA_ROUTER_LOG": str(path)}).path == path
+    assert decision_log({"TOOLHINT_LOG": "off"}).path is None
+    assert decision_log({"TOOLHINT_LOG": str(path)}).path == path
 
 
 def test_instructions_fit_the_2kb_cap():

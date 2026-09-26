@@ -16,8 +16,8 @@ from .decisions import DEFAULT_LOG, DecisionLog
 from .engine import Engine, EngineConfig, format_hint
 from .items import Item, RouteContext
 
-log = logging.getLogger("laya_router.server")
-INSTRUCTIONS = ("If a user request arrives without a [laya-router] line in context, you may call `route` "
+log = logging.getLogger("toolhint.server")
+INSTRUCTIONS = ("If a user request arrives without a [toolhint] line in context, you may call `route` "
                 "with the request text to get ranked skill/connector/tool candidates. Treat them as advisory.")
 ROUTE_DESCRIPTION = ("Rank the skills, connectors and tools most relevant to a user request. "
                      "Returns one advisory line, or an empty string when nothing stands out.")
@@ -85,7 +85,7 @@ def build_server(service: RouterService) -> MCPServer:
         service.start()  # stdio_server already points fd 1 at stderr, so stray model prints miss the wire
         yield {}
 
-    server = MCPServer("laya-router", instructions=INSTRUCTIONS, version=__version__, lifespan=lifespan)
+    server = MCPServer("toolhint", instructions=INSTRUCTIONS, version=__version__, lifespan=lifespan)
 
     @server.tool(name="route", description=ROUTE_DESCRIPTION)
     def route(prompt: str, cwd: str = "", transcript_path: str = "", session_id: str = "",
@@ -99,13 +99,13 @@ def build_server(service: RouterService) -> MCPServer:
 def default_engine(env: Mapping[str, str] = os.environ) -> Engine:
     from .scorer import LayaScorer
 
-    model = env.get("LAYA_ROUTER_MODEL", "typed-decisions")
-    scorer = LayaScorer(model=model, device=env.get("LAYA_ROUTER_DEVICE") or None)
+    model = env.get("TOOLHINT_MODEL", "typed-decisions")
+    scorer = LayaScorer(model=model, device=env.get("TOOLHINT_DEVICE") or None)
     return Engine(scorer, EngineConfig.from_env(env))
 
 
 def decision_log(env: Mapping[str, str] = os.environ) -> DecisionLog:
-    raw = env.get("LAYA_ROUTER_LOG", "")
+    raw = env.get("TOOLHINT_LOG", "")
     if raw.lower() in ("0", "off", "false"):
         return DecisionLog(None)
     return DecisionLog(Path(raw) if raw else DEFAULT_LOG)

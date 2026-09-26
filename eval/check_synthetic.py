@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-from laya_router.catalog import harness_catalogs
+from toolhint.catalog import harness_catalogs
 
 rows = [json.loads(line) for line in Path("eval/synthetic.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
 catalogs = harness_catalogs()
