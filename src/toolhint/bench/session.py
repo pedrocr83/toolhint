@@ -38,6 +38,10 @@ def command(task: Task, arm: str, model: str, claude_bin: str = "claude") -> lis
 
 def clean_env(base: Mapping[str, str], decisions: Path) -> dict[str, str]:
     env = {key: value for key, value in base.items() if not key.startswith(PARENT_PREFIXES) and key not in PARENT_FLAGS}
+    # `uv run` puts the project venv first on PATH; sessions should get the system python an agent would get
+    venv = env.pop("VIRTUAL_ENV", None)
+    if venv and "PATH" in env:
+        env["PATH"] = os.pathsep.join(p for p in env["PATH"].split(os.pathsep) if p != os.path.join(venv, "bin"))
     # the router inherits it and runs inside the workspace, so the path must be absolute
     env["TOOLHINT_LOG"] = str(decisions.resolve())
     return env
