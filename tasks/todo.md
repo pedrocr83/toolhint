@@ -178,3 +178,12 @@ Details are in `spike/FINDINGS.md` § Gate.
 - New install: uv tool `toolhint`; `toolhint warmup` → 365 Claude Code items, 131 Cowork items; plugin `toolhint@toolhint` (user scope). `catalog --refresh` skips our own server (7 servers refreshed).
 - Live check: headless two-turn session e0e54e4c (tools disabled) → transcript holds `[toolhint] advisory, ignore if irrelevant — skills: anthropic-skills:morning (0.54)`; decision log 845 ms.
 - Observed RT-3 live: three leftover `laya-router` servers from open sessions held 5.6 GB of the 8 GB RTX 3070 Laptop GPU, so new processes fell back to CPU (845–895 ms per route). Restarting those sessions frees it.
+
+## Router fixes RT-1 to RT-6 (plan.md, 2026-09-26)
+- [ ] Task 1 · RT-5 label boilerplate stripped before the 80-char cut
+- [ ] Task 2 · RT-4 prompt view (code, tags, head+tail) and earlier request for short prompts
+- [ ] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback
+- [ ] Task 4 · RT-6 per-session hint memory, reset on compaction
+- [ ] Task 5 · RT-1/RT-2 evidence run and decision (rules A/B/C, option-count check)
+- [ ] Task 6 · RT-1/RT-2 implement the decision
+- [ ] Finish: suite, slow test, ruff baseline, live checks, fresh review, change report, local merge

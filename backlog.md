@@ -703,7 +703,7 @@ Add a model ranker only if replay shows it beats head+tail (CLN-6).
 - [ ] **HK-6** · The `eval build --out` default is relative to the current directory. · S
 - [ ] **HK-7** · There's no `TOOLHINT_K_CONNECTOR`, and `TOOLHINT_TAU` sets all three kinds at once; add per-kind variables. · S
 - [ ] **HK-8** · numpy and anyio are used but not declared in `pyproject.toml`. · S
-- [ ] **HK-9** · `plan.md` Global Constraints still list the old defaults. · S
+- [x] **HK-9** · `plan.md` Global Constraints still list the old defaults. Closed 2026-09-26: that plan is archived as history in `docs/superpowers/plans/2026-09-25-laya-router-plan.md`. · S
 
 ## Design rules (what not to do)
 
