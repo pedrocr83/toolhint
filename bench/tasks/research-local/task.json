@@ -1,0 +1,12 @@
+{
+  "prompt": "prompt.md",
+  "budget_usd": 3,
+  "timeout_s": 900,
+  "allowed_tools": ["Bash(python3:*)"],
+  "grading": {
+    "kind": "checklist",
+    "output": "BRIEF.md",
+    "checklist": "checklist.json",
+    "judge_reference": "reference.md"
+  }
+}

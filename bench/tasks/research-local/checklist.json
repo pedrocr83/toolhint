@@ -1,0 +1,19 @@
+[
+  {"id": "recommends_routeloom", "pattern": "recommend[^\\n]{0,150}RouteLoom|RouteLoom[^\\n]{0,150}recommend|(go|proceed|sign) with RouteLoom|(choose|select|adopt|pick) RouteLoom"},
+  {"id": "pick_rate_17", "pattern": "17\\s?%|112[^\\n]{0,40}131"},
+  {"id": "mispicks_1.9_to_1.1", "patterns": ["1\\.9\\s?%", "1\\.1\\s?%"]},
+  {"id": "benefit_312k", "pattern": "312[\\s,.]?(000|k)|€\\s?312"},
+  {"id": "routeloom_price_214k", "pattern": "214[\\s,.]?(000|k)|€\\s?214"},
+  {"id": "pathwise_price_176k", "pattern": "176[\\s,.]?(000|k)|€\\s?176"},
+  {"id": "one_time_38k_and_95k", "patterns": ["38[\\s,.]?(000|k)|€\\s?38", "95[\\s,.]?(000|k)|€\\s?95"]},
+  {"id": "pathwise_needs_wms_v9", "pattern": "WMS\\s?v?9|\\bv9\\b"},
+  {"id": "peak_season_deadline", "pattern": "peak|November"},
+  {"id": "cfo_18_month_payback", "pattern": "18[\\s-]?month"},
+  {"id": "certificate_outage_risk", "pattern": "certificate"},
+  {"id": "works_council", "pattern": "works council|union"},
+  {"id": "rotterdam_liege", "pattern": "Rotterdam|Li[eè]ge"},
+  {"id": "flags_25_percent_claim", "pattern": "25\\s?%"},
+  {"id": "decision_by_15_july", "pattern": "15 July|July 15|2026-07-15|15/07|15\\.07"},
+  {"id": "cites_4_sources", "distinct": "\\b0[1-6]-[a-z]", "min": 4},
+  {"id": "max_600_words", "max_words": 600}
+]

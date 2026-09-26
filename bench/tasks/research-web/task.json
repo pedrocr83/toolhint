@@ -1,0 +1,12 @@
+{
+  "prompt": "prompt.md",
+  "budget_usd": 4,
+  "timeout_s": 1200,
+  "allowed_tools": ["WebSearch", "WebFetch"],
+  "grading": {
+    "kind": "checklist",
+    "output": "RESEARCH.md",
+    "checklist": "checklist.json",
+    "judge_reference": "reference.md"
+  }
+}

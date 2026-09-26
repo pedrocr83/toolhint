@@ -1,0 +1,17 @@
+[
+  {"id": "stdio", "pattern": "\\bstdio\\b"},
+  {"id": "streamable_http", "pattern": "streamable[\\s-]+HTTP"},
+  {"id": "sse_superseded", "pattern": "(SSE|server-sent events)[^\\n]{0,160}(deprecat|replac|supersed|legacy|backward)|(deprecat|replac|supersed|legacy|backward)[^\\n]{0,160}(SSE|server-sent events)"},
+  {"id": "json_rpc", "pattern": "JSON-RPC"},
+  {"id": "oauth_2_1", "pattern": "OAuth\\s*2\\.1"},
+  {"id": "pkce", "pattern": "PKCE"},
+  {"id": "protected_resource_metadata", "pattern": "RFC\\s?9728|protected resource metadata"},
+  {"id": "resource_indicators", "pattern": "RFC\\s?8707|resource indicator|resource parameter"},
+  {"id": "authorization_server_metadata", "pattern": "RFC\\s?8414|authorization server metadata"},
+  {"id": "client_registration", "pattern": "dynamic client registration|RFC\\s?7591|client ID metadata"},
+  {"id": "stdio_credentials_from_environment", "pattern": "environment[^\\n]{0,80}(credential|variable|secret)|(credential|token|secret)s?[^\\n]{0,80}environment"},
+  {"id": "spec_revision_dates", "pattern": "20(24|25|26)-\\d{2}-\\d{2}"},
+  {"id": "cites_3_urls", "distinct": "https?://[^\\s)\\]>\"']+", "min": 3},
+  {"id": "cites_official_spec", "pattern": "modelcontextprotocol\\.io"},
+  {"id": "max_700_words", "max_words": 700}
+]

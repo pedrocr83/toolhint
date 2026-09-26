@@ -1,0 +1,1 @@
+Everything we collected on the warehouse routing software decision is in `sources/`. Please read all of it and write `BRIEF.md`: a one-page brief for our COO, 600 words at most. It needs a clear recommendation, the key numbers behind it, the risks and open questions, and anything in the sources that doesn't add up. Cite the source file for each claim.

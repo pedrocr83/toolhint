@@ -1,0 +1,12 @@
+From: Marc Okafor <m.okafor@marlowfinch.example>
+To: Ines Vermeer <i.vermeer@marlowfinch.example>
+Date: 22 May 2026 09:14
+Subject: Routing software, let's keep it simple
+
+Ines,
+
+Quick thought after Wednesday. The Tilburg pilot showed 25% faster picking, so honestly either tool will pay for itself many times over. Given that, Pathwise is the obvious choice: it is €38k a year cheaper than RouteLoom, and their SLA is better too.
+
+Customers keep asking about our delivery times, so I'd rather we sign before the summer and stop debating.
+
+Marc

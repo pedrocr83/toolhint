@@ -27,6 +27,22 @@ The router is conservative. On prompts that need a skill or connector, it adds a
   - `TOOLHINT_TAU` sets one τ for every kind.
   - `TOOLHINT_LOG`: set it to `off` to disable the log.
 
+## Benchmark
+`python -m toolhint.bench` runs real tasks in headless Claude Code sessions, once with toolhint and once without, and compares the results. Everything else about your setup stays the same: the same plugins, hooks and CLAUDE.md.
+- **Tasks** (`bench/tasks/`):
+  - `coding-app`: build a command-line expense tracker; graded by 15 hidden acceptance tests.
+  - `research-local`: brief a COO from six bundled sources that contain traps; graded by a 17-point checklist.
+  - `research-web`: research MCP transports and authorization on the web; graded by a 15-point checklist.
+  - Every task is also scored 1–10 by a separate Sonnet judge that runs without your hooks or plugins.
+- **Measured per run:** the score, hints shown, skills and tools used (subagents included), permission denials, tokens (input, output, cache), cost, turns and time.
+- **Run it:**
+  - From Claude Code: `/bench` (add `--dry-run` to see the plan first).
+  - From a terminal: `uv run python -m toolhint.bench`, with options `--tasks`, `--reps` (default 3), `--model` (default sonnet), `--judge-model`, `--warmup` (default 45 s).
+  - To rebuild a report: `uv run python -m toolhint.bench --report bench/runs/<stamp>`.
+- **Cost and time:** the default 18 runs take a few hours and roughly $15–40 on Sonnet. Each run has a budget cap; the caps add up to $78.
+- **Before running:** close other toolhint sessions (VS Code panels, the desktop app). Each one holds about 2.7 GB of GPU memory, and the on-arm router falls back to CPU when the GPU is full.
+- **Output:** `bench/runs/<stamp>/` holds `report.md`, `results.jsonl`, and each run's workspace, stream events and router decisions. The folder is gitignored.
+
 ## Update
 The router is an editable install, so it follows this checkout. Claude Code keeps its own copy of the plugin's hooks, so refresh that copy after pulling, then restart open sessions:
 ```bash

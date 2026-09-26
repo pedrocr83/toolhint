@@ -20,3 +20,6 @@ spike/hook_probe/calls.jsonl
 spike/hook_probe/*.log
 spike/hook_probe/out*.txt
 spike/hook_probe/latest
+
+# benchmark runs: workspaces, session events, decision logs
+bench/runs/
