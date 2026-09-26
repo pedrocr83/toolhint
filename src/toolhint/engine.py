@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -11,12 +12,17 @@ from typing import Protocol
 import numpy as np
 
 from .bm25 import BM25
+from .dataset import TAG_BLOCK
 from .items import KINDS, Candidate, Item, Ranking
 
 log = logging.getLogger("toolhint.engine")
 NONE_ID = "none"
 NONE_LABEL = "no specialized skill or tool needed; general request"
 MAX_PROMPT_CHARS = 2000
+HEAD_CHARS = 1200  # a long prompt keeps its start and its end, where pasted logs leave the question
+SHORT_PROMPT_CHARS = 60
+EARLIER_CHARS = 600
+CODE_FENCE = re.compile(r"```.*?(?:```|\Z)", re.DOTALL)
 QUESTIONS = {
     "skill": "Which skill should handle this request?",
     "connector": "Which connected app or MCP server does this request need?",
@@ -57,6 +63,15 @@ class EngineConfig:
 def should_skip(prompt: str, previous: str, min_chars: int) -> bool:
     text = prompt.strip()
     return len(text) < min_chars or text.startswith("/") or text == previous.strip()
+
+
+def prompt_view(prompt: str) -> str:
+    """What Laya reads: fenced code and tag blocks collapsed, long text cut to its start and end."""
+    text = " ".join(TAG_BLOCK.sub(" ", CODE_FENCE.sub(" [code] ", prompt)).split())
+    if len(text) <= MAX_PROMPT_CHARS:
+        return text
+    cut = " … "
+    return text[:HEAD_CHARS] + cut + text[HEAD_CHARS + len(cut) - MAX_PROMPT_CHARS:]
 
 
 def short_key(item: Item) -> str:
@@ -122,28 +137,31 @@ class Engine:
         self.overflows = 0
         self._previous = ""
 
-    def rank(self, prompt: str, items: Sequence[Item]) -> Ranking:
+    def rank(self, prompt: str, items: Sequence[Item], previous: str = "") -> Ranking:
         """Thresholded, capped candidates; empty when skipped or nothing clears tau."""
         started = time.perf_counter()
         ranking = Ranking(model=self.scorer.model)
         if should_skip(prompt, self._previous, self.cfg.min_prompt_chars):
             return ranking
         self._previous = prompt
-        for kind, scored in self.scores(prompt, items).items():
+        for kind, scored in self.scores(prompt, items, previous).items():
             by_id = {item.id: item for item in items if item.kind == kind}
             setattr(ranking, PLURAL[kind], self._select(kind, scored, by_id))
         ranking.latency_ms = round((time.perf_counter() - started) * 1000, 1)
         return ranking
 
-    def scores(self, prompt: str, items: Sequence[Item]) -> Scores:
+    def scores(self, prompt: str, items: Sequence[Item], previous: str = "") -> Scores:
         """Per kind: (item id or NONE_ID, probability), best first. No thresholds, no skipping."""
-        text = prompt.strip()[:MAX_PROMPT_CHARS]
+        state = {"request": prompt_view(prompt)}
+        if previous and len(state["request"]) < SHORT_PROMPT_CHARS:
+            state["earlier request"] = prompt_view(previous)[:EARLIER_CHARS]
+        query = " ".join(state.values())
         pools = {kind: distinct(item for item in items if item.kind == kind) for kind in KINDS}
         pools = {kind: pool for kind, pool in pools.items() if pool}
         if not pools:
             return {}
-        keyed = {kind: option_keys(self._shortlist(text, pool, self.cfg.k[kind])) for kind, pool in pools.items()}
-        answers, keyed = self._choose(text, keyed)
+        keyed = {kind: option_keys(self._shortlist(query, pool, self.cfg.k[kind])) for kind, pool in pools.items()}
+        answers, keyed = self._choose(state, keyed)
         return {kind: translate(answers[kind], keyed[kind]) for kind in keyed if kind in answers}
 
     def _shortlist(self, text: str, pool: list[Item], k: int) -> list[Item]:
@@ -152,11 +170,11 @@ class Engine:
         scores = np.asarray(lexical_index(tuple(pool)).scores(text))
         return [pool[int(i)] for i in np.argsort(-scores, kind="stable")[:k]]
 
-    def _choose(self, text: str, keyed: dict[str, dict[str, Item]]) -> tuple[dict, dict[str, dict[str, Item]]]:
+    def _choose(self, state: dict, keyed: dict[str, dict[str, Item]]) -> tuple[dict, dict[str, dict[str, Item]]]:
         """One predict call; halve option lists while they overflow Laya's head budget."""
         for _ in range(3):
             try:
-                return self.scorer.choose({"request": text}, build_questions(keyed)), keyed
+                return self.scorer.choose(state, build_questions(keyed)), keyed
             except ValueError as exc:
                 if "head_max_len" not in str(exc):
                     raise

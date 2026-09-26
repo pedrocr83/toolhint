@@ -108,3 +108,13 @@ def test_decision_log_rotates_and_can_be_disabled(tmp_path):
 
 def test_instructions_fit_the_2kb_cap():
     assert len(INSTRUCTIONS) < 300 and "route" in INSTRUCTIONS
+
+
+def test_short_prompts_get_the_earlier_prompt_from_the_transcript(tmp_path):
+    transcript = tmp_path / "s.jsonl"
+    transcript.write_text(json.dumps({"type": "user", "message": {"content": "refactor the auth module"}}) + "\n")
+    scorer = FakeScorer()
+    svc = RouterService(lambda: Engine(scorer), discover=lambda ctx: ITEMS)
+    svc.load()
+    svc.route(RouteContext("and the unit tests?", transcript_path=str(transcript)))
+    assert scorer.choose_calls[-1][0]["earlier request"] == "refactor the auth module"

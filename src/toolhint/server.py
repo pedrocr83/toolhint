@@ -12,8 +12,9 @@ from pathlib import Path
 from mcp.server.mcpserver import MCPServer
 
 from . import __version__, catalog
+from .dataset import previous_prompt
 from .decisions import DEFAULT_LOG, DecisionLog
-from .engine import Engine, EngineConfig, format_hint
+from .engine import SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint
 from .items import Item, RouteContext
 
 log = logging.getLogger("toolhint.server")
@@ -59,7 +60,8 @@ class RouterService:
             return ""
         try:
             items = self._discover(ctx)
-            ranking = engine.rank(ctx.prompt, items)
+            short = len(ctx.prompt.strip()) < SHORT_PROMPT_CHARS
+            ranking = engine.rank(ctx.prompt, items, previous_prompt(ctx.transcript_path, ctx.prompt) if short else "")
             hint = format_hint(ranking)
         except Exception:
             log.exception("route failed")

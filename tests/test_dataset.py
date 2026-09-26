@@ -1,6 +1,6 @@
 import json
 
-from toolhint.dataset import build, prompt_text, rows_from_transcript
+from toolhint.dataset import build, previous_prompt, prompt_text, rows_from_transcript
 
 
 def user(content, **extra):
@@ -67,3 +67,18 @@ def test_cowork_rows_map_connector_uuid_to_name(tmp_path):
     row = json.loads((tmp_path / "out" / "transcripts.jsonl").read_text())
     assert row["harness"] == "cowork"
     assert row["gold"] == {"tool": "mcp__7729dcbf__search_threads", "connector": "Gmail"}
+
+
+def test_previous_prompt_is_the_latest_real_prompt_before_the_current_one(tmp_path):
+    path = tmp_path / "s.jsonl"
+    write(path, [user("refactor the auth module"), assistant(("Read", {})), tool_result(), user("and the unit tests?")])
+    assert previous_prompt(str(path), "and the unit tests?") == "refactor the auth module"
+    assert previous_prompt(str(path), "a brand new prompt") == "and the unit tests?"
+
+
+def test_previous_prompt_reads_only_the_tail_and_fails_open(tmp_path):
+    path = tmp_path / "s.jsonl"
+    write(path, [user("an old prompt")] + [assistant(("Read", {"file_path": "x" * 500}))] * 20)
+    assert previous_prompt(str(path), "now", tail_bytes=2048) == ""
+    assert previous_prompt(str(tmp_path / "missing.jsonl"), "now") == ""
+    assert previous_prompt("", "now") == ""

@@ -11,6 +11,7 @@ from .catalog import COWORK_ROOT, connector_of, load_json, session_json_for
 
 TAG_BLOCK = re.compile(r"<([a-zA-Z_-]+)>.*?</\1>", re.DOTALL)
 MAX_PROMPT = 2000
+TAIL_BYTES = 256 * 1024
 
 
 def read_jsonl(path: Path) -> Iterator[dict]:
@@ -41,6 +42,27 @@ def prompt_text(entry: dict) -> str | None:
     if not isinstance(content, str) or "<command-name>" in content:
         return None
     return TAG_BLOCK.sub(" ", content).strip()[:MAX_PROMPT] or None
+
+
+def previous_prompt(transcript_path: str, current: str, tail_bytes: int = TAIL_BYTES) -> str:
+    """Latest real user prompt in the transcript's tail other than `current`; "" when none or unreadable."""
+    try:
+        with open(transcript_path, "rb") as handle:
+            size = handle.seek(0, 2)
+            handle.seek(max(0, size - tail_bytes))
+            lines = handle.read().decode("utf-8", "replace").splitlines()[1 if size > tail_bytes else 0:]
+    except OSError:
+        return ""
+    now = TAG_BLOCK.sub(" ", current).strip()[:MAX_PROMPT]
+    for line in reversed(lines):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        text = prompt_text(entry) if isinstance(entry, dict) else None
+        if text and text != now:
+            return text
+    return ""
 
 
 def tool_uses(entry: dict) -> list[dict]:

@@ -1,6 +1,13 @@
 from fakes import FakeScorer
 
-from toolhint.engine import NONE_ID, Engine, EngineConfig, option_keys, should_skip
+from toolhint.engine import (
+    NONE_ID,
+    Engine,
+    EngineConfig,
+    option_keys,
+    prompt_view,
+    should_skip,
+)
 from toolhint.items import Item
 
 K2 = EngineConfig(k={"skill": 2, "connector": 15, "tool": 10})
@@ -141,3 +148,26 @@ def test_config_from_env():
     assert cfg.k == {"skill": 7, "connector": 5, "tool": 5}
     assert cfg.tau == {"skill": 0.6, "connector": 0.6, "tool": 0.6}
     assert EngineConfig().tau == {"skill": 0.5, "connector": 0.6, "tool": 0.5}
+
+
+def test_prompt_view_collapses_code_and_tags():
+    raw = "why does this fail?\n```py\nraise KeyError\n```\n<system-reminder>ignore</system-reminder> thanks"
+    assert prompt_view(raw) == "why does this fail? [code] thanks"
+
+
+def test_prompt_view_keeps_the_end_of_long_prompts():
+    view = prompt_view("log line " * 400 + "so why does the build fail?")
+    assert view.endswith("so why does the build fail?") and len(view) <= 2003
+
+
+def test_short_prompt_carries_the_earlier_request():
+    scorer = FakeScorer()
+    Engine(scorer).rank("and the unit tests?", SKILLS, previous="refactor the auth module")
+    assert scorer.choose_calls[0][0] == {"request": "and the unit tests?", "earlier request": "refactor the auth module"}
+
+
+def test_long_prompt_ignores_the_earlier_request():
+    scorer = FakeScorer()
+    Engine(scorer).rank(PROMPT + " and explain the root cause of the flaky assertion", SKILLS,
+                        previous="refactor the auth module")
+    assert list(scorer.choose_calls[0][0]) == ["request"]
