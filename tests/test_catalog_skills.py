@@ -1,11 +1,26 @@
 import json
 
-from toolhint.catalog import claude_code_skills, cowork_skills, one_line, scan_commands, scan_skills
+import pytest
+
+from toolhint.catalog import claude_code_skills, cowork_skills, make_item, one_line, scan_commands, scan_skills
 
 
 def test_one_line_takes_first_sentence_and_truncates():
     assert one_line("Fix bugs. Then more.") == "Fix bugs."
     assert len(one_line("x" * 200)) == 80
+
+
+@pytest.mark.parametrize(("description", "label"), [
+    ("Use when a task needs reading many files. More text.", "a task needs reading many files."),
+    ("Use this skill to draft replies to email threads.", "draft replies to email threads."),
+    ("This skill should be used when the user asks for slides.", "the user asks for slides."),
+    ("Use AFTER code changes are complete.", "AFTER code changes are complete."),
+    ("Useful helpers for PDFs.", "Useful helpers for PDFs."),
+])
+def test_labels_drop_leading_boilerplate(description, label):
+    item = make_item("skill", "s", description, "user")
+    assert item.label == label
+    assert item.text == description
 
 
 def test_scan_skills_reads_name_and_description(tmp_path, write_skill):

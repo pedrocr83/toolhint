@@ -180,7 +180,7 @@ Details are in `spike/FINDINGS.md` § Gate.
 - Observed RT-3 live: three leftover `laya-router` servers from open sessions held 5.6 GB of the 8 GB RTX 3070 Laptop GPU, so new processes fell back to CPU (845–895 ms per route). Restarting those sessions frees it.
 
 ## Router fixes RT-1 to RT-6 (plan.md, 2026-09-26)
-- [ ] Task 1 · RT-5 label boilerplate stripped before the 80-char cut
+- [x] Task 1 · RT-5 label boilerplate stripped before the 80-char cut (options max 36 tokens, worst 6-option sum 213 of 240: Laya never truncates, so no per-decision token log)
 - [ ] Task 2 · RT-4 prompt view (code, tags, head+tail) and earlier request for short prompts
 - [ ] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback
 - [ ] Task 4 · RT-6 per-session hint memory, reset on compaction
