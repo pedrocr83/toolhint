@@ -192,4 +192,23 @@ Details are in `spike/FINDINGS.md` § Gate.
   - Option count (150 rows, gold pool shrunk from 5 candidates to 1 or 2): p_gold rises +0.24 at 2 options and +0.06 at 3 (small pools inflate p; the backlog expected the opposite). r drifts 0.080/0.073; pinning T to the 6–10 value makes it worse (r 0.096/0.078, p 0.357/0.172). Both local catalogs have ≥ 6 items per kind (claude-code 87/13/265, cowork 18/6/107), so every question has the calibrated 6 options
   - RT-4 ablation: identical on dev/natural except 2 fewer tool false alarms of 323; changes 0 of 84 extracted real prompts (the extractor already strips tags), but 5 of 20 live hook prompts carry tag blocks and 8 are under 60 chars. Kept
 - [x] Task 6 · RT-1/RT-2: no engine or scorer change (A kept, nothing pinned); RT-5 reverted; backlog statuses updated. README numbers still hold (14% of other turns hinted vs "about 16%"; 4.6–6.8% per kind vs "5–8%"), left as is
-- [ ] Finish: suite, slow test, ruff baseline, live checks, fresh review, change report, local merge
+- [x] Finish: suite, slow test, ruff baseline, live checks, fresh review, change report. Local merge left to the user
+
+### Review (router fixes)
+- **Fresh reviewer (Opus), 0bbea65..e541f0b:** "with fixes"; 1 Important, 0 Critical.
+- **Re-graded by effect:** the short-prompt minor went up to Important. The RT-3 load-time minor stayed Minor, because laya prints its own warning at load (`agent.py:430`) and each decision logs `device: cpu`.
+- **Fixed** (tests RED→GREEN; suite 96/96; ruff baseline 5):
+  - **Stale plugin copy never reset dedupe:** dedupe is now opt-in via `"dedupe": true` in `hooks.json`; plugin bumped to 0.2.0; README has an Update section. Tests: `test_repeats_are_hinted_again_without_the_dedupe_flag`, `test_prompt_hook_opts_into_session_dedupe`. Live: new hooks suppress and reset; main's hooks show repeats.
+  - **Short prompts got the wrong or no earlier prompt:** skip compaction summaries and interrupt markers; tail read up to 4 MB; "short" judged on the view. Tests: `test_prompt_text_skips_compaction_summaries_and_interrupt_markers`, `test_previous_prompt_reaches_past_large_tool_results`, `test_short_follow_ups_with_tag_blocks_get_the_earlier_prompt`. Replay: 120/121 right (was 55); worst read 20 ms.
+- **Deferred minors:**
+  - Memory marks ids seen even when a hint times out or is cut by the length cap.
+  - The RT-3 warning misses a load-time fallback, and the decision where a fallback happens is logged with the old device.
+  - The decision log lacks shown/suppressed ids and an earlier-request flag.
+  - An unclosed fence swallows the rest of the prompt; the head+tail cut counts characters, not tokens.
+  - `_hinted` has no lock.
+  - No server tests for a missing session_id or the unfiltered log record.
+  - Runtime modules import the eval module `dataset`.
+- **Doc nits:**
+  - Negatives are 323, not the plan's 200.
+  - The plan's 21%/56% multi-item shares and the backlog's 28%/53% measure different things.
+  - Neither is edited: the plan is the record of intent.

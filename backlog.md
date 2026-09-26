@@ -143,6 +143,7 @@ Themes group the items; the roadmap orders them.
     - `project` is not added.
     - **Effect on the eval sets:** neutral, apart from 2 fewer false tool hints out of 323. Their prompts are already cleaned when extracted.
     - **Live prompts:** 5 of 20 logged hook prompts carried tag blocks, and 8 were under 60 characters.
+    - **Review fix:** compaction summaries and interrupt markers no longer count as prompts, and the transcript tail read is up to 4 MB. "Short" is judged on the cleaned view. Replayed over every local short prompt that has an earlier one, 120 of 121 now get the right earlier prompt (55 before), and the worst read takes 20 ms.
   - **Do:**
     - Keep the start and the end of long prompts instead of only the first 2000 characters ([engine.py:140](src/toolhint/engine.py#L140)). A pasted log with the question at the end currently loses the question.
     - Strip fenced code, pasted logs and `<system-reminder>` blocks.
@@ -176,6 +177,7 @@ Themes group the items; the roadmap orders them.
     - An item is hinted once per session. The memory holds ids only, for at most 64 sessions.
     - A `SessionStart` hook with matcher `compact` clears it.
     - **Verified live:** after `/compact` the hint came back. With the hook removed, it stayed silent.
+    - **Opt-in, from plugin 0.2.0:** the hook passes `"dedupe": true`. An older cached plugin copy, which has no compaction hook, keeps getting repeats rather than losing hints for good. This was verified live with main's `hooks.json`.
   - **Do:**
     - Don't repeat an identical hint within a session.
     - Re-send the active hints after compaction, using a SessionStart hook with matcher `compact`. Verify that `mcp_tool` hooks run for that source; the docs say they are skipped at launch because servers aren't up yet.
