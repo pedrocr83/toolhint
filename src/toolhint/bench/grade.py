@@ -45,7 +45,10 @@ def checklist(text: str, checks: list[dict]) -> dict:
         if "max_words" in check:
             ok = len(text.split()) <= check["max_words"]
         elif "distinct" in check:
-            ok = len({m.group(0).lower() for m in re.finditer(check["distinct"], text, FLAGS)}) >= check["min"]
+            # with capture groups, the first one that matched is the key: "[01]" and "01-pilot.md" cite one source
+            hits = {next((g for g in m.groups() if g), m.group(0)).lower()
+                    for m in re.finditer(check["distinct"], text, FLAGS)}
+            ok = len(hits) >= check["min"]
         else:
             ok = all(re.search(pattern, text, FLAGS) for pattern in check.get("patterns") or [check["pattern"]])
         results[check["id"]] = ok

@@ -158,3 +158,27 @@ def test_dry_run_lists_every_run_without_starting_one(capsys):
 def test_the_router_log_path_is_absolute_because_the_router_runs_inside_the_workspace(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     assert clean_env({}, Path("runs/d.jsonl"))["TOOLHINT_LOG"] == str(tmp_path / "runs" / "d.jsonl")
+
+
+def test_distinct_counts_the_capture_group_when_the_pattern_has_one():
+    checks = [{"id": "sources", "distinct": r"(?:\b|\[)0([1-6])(?:-[a-z]|\])", "min": 3}]
+    assert checklist("[01] and 01-pilot.md and [02]", checks)["passed"] == 0
+    assert checklist("[01], 02-metrics.csv and [03]", checks)["passed"] == 1
+
+
+def test_regrade_rescores_saved_workspaces_and_keeps_the_judge(tmp_path):
+    from toolhint.bench.__main__ import main
+    workspace = tmp_path / "research-local" / "on-1" / "workspace"
+    workspace.mkdir(parents=True)
+    (workspace / "BRIEF.md").write_text("## Recommendation\n\nSign RouteLoom by 15 July [05].")
+    old = {**record("on", 1, 0.0, 1.0), "task": "research-local"}
+    old["grade"]["judge"] = {"score": 5}
+    (tmp_path / "results.jsonl").write_text(json.dumps(old) + "\n")
+    assert main(["--regrade", str(tmp_path)]) == 0
+    [new] = [json.loads(line) for line in (tmp_path / "results.jsonl").read_text().splitlines()]
+    assert new["grade"]["detail"]["checks"]["recommends_routeloom"] and new["grade"]["score"] > 0
+    assert new["grade"]["judge"] == {"score": 5}
+    assert (tmp_path / "report.md").exists()
+    main(["--regrade", str(tmp_path)])
+    [kept] = [json.loads(line) for line in (tmp_path / "results.jsonl.bak").read_text().splitlines()]
+    assert kept["grade"]["score"] == 0.0  # the first backup holds the original grades

@@ -48,3 +48,11 @@ def test_graders_and_references_are_outside_the_starting_workspace():
         workspace = loaded.root / "workspace"
         names = {p.name for p in workspace.rglob("*")} if workspace.is_dir() else set()
         assert not names & {"hidden", "reference", "reference.md", "checklist.json", "task.json", "prompt.md"}
+
+
+def test_the_brief_checklist_accepts_the_phrasings_real_runs_used():
+    result = score("research-local", "## Recommendation\n\n**Sign RouteLoom by 15 July [05].** See [01], [02], [03], [04].")
+    assert result["checks"]["recommends_routeloom"] and result["checks"]["cites_4_sources"]
+    assert not score("research-local", "## Recommendation\n\nSign Pathwise now.")["checks"]["recommends_routeloom"]
+    listed = score("research-local", "HR starts works-council consultation [03, 05]; see [01; 02].")["checks"]
+    assert listed["works_council"] and listed["cites_4_sources"]

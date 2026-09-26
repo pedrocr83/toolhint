@@ -30,6 +30,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--claude", default="claude", help="claude executable")
     p.add_argument("--dry-run", action="store_true", help="print the planned runs and commands, then stop")
     p.add_argument("--report", metavar="DIR", help="rebuild DIR/report.md from DIR/results.jsonl and stop")
+    p.add_argument("--regrade", metavar="DIR", help="re-grade DIR's saved workspaces with the current tests and "
+                   "checklists (judge scores are kept), rebuild the report, and stop")
     return p
 
 
@@ -60,8 +62,26 @@ def write_report(out: Path) -> Path:
     return report
 
 
+def regrade(out: Path) -> Path:
+    """Deterministic grading only, so a fixed checklist rescores old runs at no model cost."""
+    path = out / "results.jsonl"
+    records = list(read_jsonl(path))
+    tasks = {task.name: task for task in load_tasks(",".join(sorted({r["task"] for r in records})))}
+    for record in records:
+        run_dir = out / record["task"] / f"{record['arm']}-{record['rep']}"
+        graded = grade(tasks[record["task"]], run_dir / "workspace", run_dir, None)
+        record["grade"] = {**graded, "judge": record["grade"].get("judge")}
+    if not (out / "results.jsonl.bak").exists():  # keep the first backup: it holds the original grades
+        path.replace(out / "results.jsonl.bak")
+    path.write_text("".join(json.dumps(r) + "\n" for r in records), encoding="utf-8")
+    return write_report(out)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.regrade:
+        print(regrade(Path(args.regrade)))
+        return 0
     if args.report:
         print(write_report(Path(args.report)))
         return 0
