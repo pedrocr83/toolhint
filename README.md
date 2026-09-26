@@ -32,3 +32,6 @@ The router is conservative. On prompts that need a skill or connector, it adds a
 claude plugin uninstall toolhint@toolhint
 uv tool uninstall toolhint
 ```
+
+## License
+Apache-2.0. See `LICENSE`.

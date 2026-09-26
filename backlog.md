@@ -90,7 +90,8 @@ Themes group the items; the roadmap orders them.
     - Reinstall the uv tool and the Claude Code plugin, and rebuild the Cowork zip.
     - Keep the dated specs and plans as history.
   - **Why:** the name collides with other repos and implies it is an official Laya component.
-- [ ] **REL-2 · Remove private data before going public · S · Now**
+- [x] **REL-2 · Remove private data before going public · S · Now**
+  - **Done 2026-09-26:** rewrote all 43 commits. The 6 rows now keep connector-level gold only, and author and committer use the GitHub noreply address.
   - `eval/synthetic.jsonl` contains 6 lines with real Cowork connector UUIDs. Git history keeps them, so either scrub the history or publish a fresh single squashed commit.
   - Optionally rewrite the commit author email to the GitHub noreply address.
 - [x] **REL-3 · Merge `feat/laya-router`** into `main`. Done 2026-09-26 (fast-forward). · S · Now
