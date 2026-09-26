@@ -170,5 +170,11 @@ Details are in `spike/FINDINGS.md` § Gate.
 - [x] `git mv src/laya_router src/toolhint`; rename ids, hint tag, env vars, paths, snippets (GREEN)
 - [x] README and backlog.md (links, REL-1 done, EV-3 note on the old `[laya-router]` tag)
 - [x] Suite, slow test and ruff as before; no stale names outside history docs (78 passed; slow 1 passed; ruff 5 = baseline)
-- [ ] Reinstall: plugin, uv tool, move decision log, delete old cache, warmup, live hint check
-- [ ] Rebuild the Cowork zip; fast-forward main
+- [x] Reinstall: plugin, uv tool, move decision log, delete old cache, warmup, live hint check
+- [x] Rebuild the Cowork zip (`dist/toolhint-plugin.zip`); fast-forward main
+
+### Review (rename)
+- Old install removed: plugin `laya-router@layla`, marketplace `layla`, uv tool `laya-router`; `~/.cache/laya-router` deleted; decision log moved to `~/.local/state/toolhint/`.
+- New install: uv tool `toolhint`; `toolhint warmup` → 365 Claude Code items, 131 Cowork items; plugin `toolhint@toolhint` (user scope). `catalog --refresh` skips our own server (7 servers refreshed).
+- Live check: headless two-turn session e0e54e4c (tools disabled) → transcript holds `[toolhint] advisory, ignore if irrelevant — skills: anthropic-skills:morning (0.54)`; decision log 845 ms.
+- Observed RT-3 live: three leftover `laya-router` servers from open sessions held 5.6 GB of the 8 GB RTX 3070 Laptop GPU, so new processes fell back to CPU (845–895 ms per route). Restarting those sessions frees it.

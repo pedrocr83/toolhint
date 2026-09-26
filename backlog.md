@@ -126,6 +126,7 @@ Themes group the items; the roadmap orders them.
 - [ ] **RT-3 · Detect the silent fallback from GPU to CPU · S · Now**
   - **Problem:** after any CUDA out-of-memory error, laya 0.3.20 moves the model to CPU for the rest of the process (`laya/agent.py:625-635`) and only prints a warning. At 2.4 GB per session, a few parallel sessions can trigger it, and routing then takes about 2 s a turn.
   - **Do:** log the device with every decision. On a fallback, reload on the GPU or report a degraded state (SEC-4). RUN-1 makes it much less likely.
+  - **Seen live 2026-09-26:** three per-session servers held 5.6 GB of an 8 GB RTX 3070 Laptop GPU; the next process fell back to CPU (845–895 ms per route).
 - [ ] **RT-4 · Give Laya a better view of the prompt · S · Now**
   - **Do:**
     - Keep the start and the end of long prompts instead of only the first 2000 characters ([engine.py:140](src/toolhint/engine.py#L140)). A pasted log with the question at the end currently loses the question.
