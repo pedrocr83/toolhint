@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import json
+import os
 import queue
 import shutil
+import signal
 import subprocess
 import threading
 import time
@@ -58,8 +60,10 @@ def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: st
     events: list[dict] = []
     signals: queue.Queue[str] = queue.Queue()
     with stderr_path.open("w", encoding="utf-8") as stderr:
+        # its own process group: Claude Code ends background shells by signalling their group, which must never
+        # include the harness (a batch once died silently this way)
         proc = subprocess.Popen(list(cmd), cwd=cwd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                stderr=stderr, text=True)
+                                stderr=stderr, text=True, start_new_session=True)
 
         def read() -> None:
             for line in proc.stdout:
@@ -102,7 +106,7 @@ def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: st
                 send(text)
         wall_s = time.monotonic() - started
         if timed_out:
-            proc.kill()
+            kill_group(proc)
         try:
             proc.stdin.close()
         except OSError:
@@ -110,8 +114,16 @@ def run(cmd: Sequence[str], cwd: Path, env: Mapping[str, str] | None, prompt: st
         try:
             proc.wait(timeout=60)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            kill_group(proc)
             proc.wait()
         reader.join(timeout=5)
     return {"events": events, "timed_out": timed_out, "exit_code": proc.returncode, "wall_s": round(wall_s, 1),
             "followups": followups}
+
+
+def kill_group(proc: subprocess.Popen) -> None:
+    """The session and everything it started: MCP servers and background shells too."""
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        proc.kill()

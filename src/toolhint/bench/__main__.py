@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import shlex
+import signal
 import time
 from pathlib import Path
 
@@ -15,6 +17,7 @@ from .metrics import summarize
 from .report import render
 from .session import clean_env, command, prepare_workspace, run
 
+log = logging.getLogger("toolhint.bench")
 RUNS_DIR = TASKS_DIR.parent / "runs"
 # A headless session has nobody to approve a plan or answer a question, so a run that stops without its output
 # gets the nudge a user would give. Both arms get the same text, and the report counts how often it was needed.
@@ -119,16 +122,35 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out) if args.out else RUNS_DIR / time.strftime("%Y%m%d-%H%M%S")
     out.mkdir(parents=True, exist_ok=True)
     print(f"{len(plan)} runs into {out} (budget caps total ${worst:.0f})", flush=True)
+    previous = {sig: signal.signal(sig, stopped) for sig in (signal.SIGTERM, signal.SIGHUP)}
+    try:
+        run_batch(plan, out, args)
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+    if (out / "results.jsonl").exists():
+        print(write_report(out))
+    return 0
+
+
+def stopped(signum: int, _frame: object) -> None:
+    raise SystemExit(f"benchmark stopped by signal {signum}")  # say why, instead of dying silently
+
+
+def run_batch(plan: list[tuple[int, Task, str]], out: Path, args: argparse.Namespace) -> None:
     for i, (rep, task, arm) in enumerate(plan, 1):
-        record = run_one(task, arm, rep, out / task.name / f"{arm}-{rep}", args)
+        try:
+            record = run_one(task, arm, rep, out / task.name / f"{arm}-{rep}", args)
+        except Exception:  # one broken run must not end a batch that takes hours
+            print(f"[{i}/{len(plan)}] {task.name} {arm} rep {rep}: harness error, run skipped", flush=True)
+            log.exception("run %s/%s/%s failed", task.name, arm, rep)
+            continue
         with (out / "results.jsonl").open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
         judge = (record["grade"].get("judge") or {}).get("score")
         print(f"[{i}/{len(plan)}] {task.name} {arm} rep {rep}: "
               f"{'ok' if record['valid'] else record['invalid_reason']} · score {record['grade']['score']} · "
               f"judge {judge} · ${record['cost_usd'] or 0:.2f} · {record['wall_s'] / 60:.1f} min", flush=True)
-    print(write_report(out))
-    return 0
 
 
 if __name__ == "__main__":

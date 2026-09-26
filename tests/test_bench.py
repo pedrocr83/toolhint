@@ -222,3 +222,34 @@ def test_summarize_adds_up_turns_and_measures_context():
 def test_large_numbers_read_as_thousands():
     from toolhint.bench.report import stat
     assert stat([39882.0, 39912.0]) == "39,897 ± 21 (2)" and stat([0.5]) == "0.5 (1)"
+
+
+GROUP_KILLER = """import json, os, signal, sys
+print(json.dumps({"type": "system", "subtype": "init", "session_id": "s1"}), flush=True)
+sys.stdin.readline()
+print(json.dumps({"type": "result", "subtype": "success", "result": "done"}), flush=True)
+os.killpg(os.getpgid(0), signal.SIGTERM)  # what cleaning up background shells by process group can do
+"""
+
+
+def test_a_session_that_signals_its_process_group_cannot_take_the_harness_down(tmp_path):
+    fake = tmp_path / "claude.py"
+    fake.write_text(GROUP_KILLER)
+    out = run([sys.executable, str(fake)], tmp_path, None, "hello", 0, 10, tmp_path / "err.log")
+    assert out["events"][-1]["result"] == "done" and not out["timed_out"]
+
+
+def test_a_run_that_crashes_the_harness_is_skipped_and_the_batch_goes_on(tmp_path, monkeypatch, capsys):
+    import toolhint.bench.__main__ as cli
+    outcomes = iter([RuntimeError("boom"), {**record("off", 1, 1.0, 0.1), "task": "research-local"}])
+
+    def fake_run_one(*_args):
+        outcome = next(outcomes)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(cli, "run_one", fake_run_one)
+    assert cli.main(["--tasks", "research-local", "--reps", "1", "--out", str(tmp_path)]) == 0
+    assert "harness error" in capsys.readouterr().out
+    assert len((tmp_path / "results.jsonl").read_text().splitlines()) == 1 and (tmp_path / "report.md").exists()
