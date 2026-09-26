@@ -118,3 +118,10 @@ def test_short_prompts_get_the_earlier_prompt_from_the_transcript(tmp_path):
     svc.load()
     svc.route(RouteContext("and the unit tests?", transcript_path=str(transcript)))
     assert scorer.choose_calls[-1][0]["earlier request"] == "refactor the auth module"
+
+
+def test_decision_log_records_the_device(tmp_path):
+    svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})), tmp_path / "d.jsonl")
+    svc.load()
+    svc.route(RouteContext("please debug the failing test"))
+    assert json.loads((tmp_path / "d.jsonl").read_text().splitlines()[0])["device"] == "cpu"

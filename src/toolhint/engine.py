@@ -37,6 +37,7 @@ Scores = dict[str, list[tuple[str, float]]]
 
 class Scorer(Protocol):
     model: str
+    device: str
 
     def choose(self, state: dict, questions: dict) -> dict: ...
 
@@ -140,7 +141,7 @@ class Engine:
     def rank(self, prompt: str, items: Sequence[Item], previous: str = "") -> Ranking:
         """Thresholded, capped candidates; empty when skipped or nothing clears tau."""
         started = time.perf_counter()
-        ranking = Ranking(model=self.scorer.model)
+        ranking = Ranking(model=self.scorer.model, device=self.scorer.device)
         if should_skip(prompt, self._previous, self.cfg.min_prompt_chars):
             return ranking
         self._previous = prompt

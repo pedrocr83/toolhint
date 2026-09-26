@@ -51,6 +51,7 @@ class Ranking:
     tools: list[Candidate] = field(default_factory=list)
     latency_ms: float = 0.0
     model: str = ""
+    device: str = ""
 
     def is_empty(self) -> bool:
         return not (self.skills or self.connectors or self.tools)

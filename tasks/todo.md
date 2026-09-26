@@ -182,7 +182,7 @@ Details are in `spike/FINDINGS.md` § Gate.
 ## Router fixes RT-1 to RT-6 (plan.md, 2026-09-26)
 - [x] Task 1 · RT-5 label boilerplate stripped before the 80-char cut (options max 36 tokens, worst 6-option sum 213 of 240: Laya never truncates, so no per-decision token log)
 - [x] Task 2 · RT-4 prompt view (code, tags, head+tail) and earlier request for short prompts
-- [ ] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback
+- [x] Task 3 · RT-3 device in every decision, one warning on GPU→CPU fallback (no auto-reload: it would fail again under the same memory pressure; RUN-1 is the fix)
 - [ ] Task 4 · RT-6 per-session hint memory, reset on compaction
 - [ ] Task 5 · RT-1/RT-2 evidence run and decision (rules A/B/C, option-count check)
 - [ ] Task 6 · RT-1/RT-2 implement the decision

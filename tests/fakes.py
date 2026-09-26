@@ -4,6 +4,7 @@ from __future__ import annotations
 
 class FakeScorer:
     model = "fake"
+    device = "cpu"
 
     def __init__(self, answers: dict[str, dict[str, float]] | None = None, max_options: int | None = None) -> None:
         self.answers = answers or {}
