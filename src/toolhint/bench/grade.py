@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from . import Task
+from .formats import html_checklist, render_cells, xlsx_cells, xlsx_checklist
 from .session import clean_env
 
 FLAGS = re.IGNORECASE | re.MULTILINE
@@ -30,9 +31,15 @@ def grade(task: Task, workspace: Path, run_dir: Path, judge_model: str | None, c
         output = collect(workspace, spec["judge_files"])
     else:
         path = workspace / spec["output"]
-        output = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
-        checks = checklist(output, json.loads((task.root / spec["checklist"]).read_text(encoding="utf-8")))
-        score = checks["passed"] / checks["total"] if output.strip() else 0.0
+        wanted = json.loads((task.root / spec["checklist"]).read_text(encoding="utf-8"))
+        if spec["kind"] == "xlsx":
+            cells = xlsx_cells(path)
+            checks, output, present = xlsx_checklist(cells, wanted), render_cells(cells), bool(cells)
+        else:
+            output = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
+            checks = (html_checklist if spec["kind"] == "html" else checklist)(output, wanted)
+            present = bool(output.strip())
+        score = checks["passed"] / checks["total"] if present else 0.0
         detail = {"output_exists": path.is_file(), "words": len(output.split()), **checks}
     verdict = judge(task, output, judge_model, run_dir / "judge", claude_bin) if judge_model else None
     return {"score": round(score, 3), "detail": detail, "judge": verdict}

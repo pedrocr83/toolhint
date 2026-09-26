@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RouteLoom: pick paths that rewrite themselves every wave</title>
+<style>
+  :root {
+    --ink: #1c1a17; --paper: #f4efe6; --rust: #b4471f; --moss: #3f5a3c; --line: #d8cfbf;
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --body: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); line-height: 1.55; }
+  a { color: var(--rust); }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--rust); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 1rem clamp(1rem, 4vw, 3rem);
+           border-bottom: 1px solid var(--line); }
+  .mark { font-family: var(--display); font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; }
+  nav ul { display: flex; gap: 1.25rem; list-style: none; margin: 0; padding: 0; }
+  .hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 2rem; padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem); }
+  h1 { font-family: var(--display); font-size: clamp(2.2rem, 6vw, 4.4rem); line-height: 1.02; margin: 0 0 1rem; }
+  h2 { font-family: var(--display); font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin: 0 0 1.5rem; }
+  .lede { font-size: 1.15rem; max-width: 38ch; }
+  .cta { display: inline-block; margin-top: 1.5rem; padding: .85rem 1.4rem; background: var(--ink); color: var(--paper);
+         text-decoration: none; border-radius: 2px; transition: transform .2s ease; }
+  .cta:hover { transform: translateY(-2px); }
+  .route { border: 1px dashed var(--moss); padding: 1.25rem; font-family: ui-monospace, monospace; font-size: .9rem; }
+  .route b { color: var(--rust); }
+  section { padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem); border-top: 1px solid var(--line); }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0; }
+  .features article { padding: 1.25rem; border-left: 4px solid var(--moss); }
+  .features article:nth-child(2) { border-color: var(--rust); transform: translateY(1.5rem); }
+  h3 { font-family: var(--display); margin: 0 0 .5rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: .75rem; border-bottom: 1px solid var(--line); }
+  details { border-bottom: 1px solid var(--line); padding: .75rem 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  footer { padding: 2rem clamp(1rem, 4vw, 3rem); font-size: .9rem; }
+  @media (max-width: 720px) {
+    .hero { grid-template-columns: 1fr; }
+    nav ul { gap: .75rem; }
+    .features article:nth-child(2) { transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">RouteLoom</span>
+  <nav aria-label="Main"><ul><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul></nav>
+</header>
+<main>
+  <div class="hero">
+    <div>
+      <h1>Pick paths that rewrite themselves every wave.</h1>
+      <p class="lede">RouteLoom recalculates each picker's route as orders land, so your team walks less and ships more. In a 10-week pilot, pick rate rose 17% and mis-picks fell from 1.9% to 1.1%.</p>
+      <a class="cta" href="#pricing">See pricing</a>
+    </div>
+    <p class="route" aria-label="Example route">Wave 14 · picker 07<br>A12 → A19 → <b>C03 (rush)</b> → C11 → D02<br>29 m per line, down from 38 m</p>
+  </div>
+  <section id="features" aria-labelledby="features-title">
+    <h2 id="features-title">What changes on the floor</h2>
+    <div class="features">
+      <article><h3>Routes per wave</h3><p>Every wave gets fresh routes built from live stock locations, not fixed paths drawn years ago.</p></article>
+      <article><h3>Rush orders, absorbed</h3><p>A rush order lands mid-wave and the affected routes re-plan in seconds, with a heads-up to the picker.</p></article>
+      <article><h3>Works with your WMS</h3><p>A connector syncs with WMS v8 every 90 seconds, and certificate expiry is monitored for you.</p></article>
+    </div>
+  </section>
+  <section id="pricing" aria-labelledby="pricing-title">
+    <h2 id="pricing-title">Pricing</h2>
+    <table>
+      <caption class="visually-hidden">RouteLoom plans</caption>
+      <thead><tr><th scope="col">Plan</th><th scope="col">Sites</th><th scope="col">Price per year</th></tr></thead>
+      <tbody>
+        <tr><td>Pilot</td><td>1 site, 10 weeks</td><td>€9,500 once</td></tr>
+        <tr><td>Network</td><td>Up to 6 sites</td><td>€214,000</td></tr>
+        <tr><td>Enterprise</td><td>7 sites or more</td><td>Talk to us</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section id="faq" aria-labelledby="faq-title">
+    <h2 id="faq-title">Frequently asked questions</h2>
+    <details><summary>What happens if RouteLoom goes down?</summary><p>Pickers fall back to printed lists; the runbook is part of onboarding.</p></details>
+    <details><summary>How long does training take?</summary><p>About six hours per picker.</p></details>
+    <details><summary>Does it track individual pickers?</summary><p>It records per-picker performance, so check your works council requirements first.</p></details>
+  </section>
+</main>
+<footer><p>RouteLoom · route optimization for warehouse picking · <a href="mailto:hello@routeloom.example">hello@routeloom.example</a></p></footer>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {"id": "inline_css", "rule": "inline_css"},
+  {"id": "html_lang", "rule": "html_lang"},
+  {"id": "viewport_meta", "rule": "viewport_meta"},
+  {"id": "title", "rule": "title"},
+  {"id": "one_h1", "rule": "one_h1"},
+  {"id": "heading_order", "rule": "heading_order"},
+  {"id": "main_landmark", "rule": "main_landmark"},
+  {"id": "hero_features_pricing_faq", "rule": "required_sections"},
+  {"id": "responsive_css", "rule": "responsive_css"},
+  {"id": "focus_styles", "rule": "focus_styles"},
+  {"id": "reduced_motion_respected", "rule": "reduced_motion"},
+  {"id": "images_have_alt", "rule": "img_alt"},
+  {"id": "faq_is_a_disclosure", "rule": "faq_disclosure"},
+  {"id": "distinctive_typography", "rule": "distinctive_font"}
+]

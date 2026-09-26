@@ -33,13 +33,16 @@ The router is conservative. On prompts that need a skill or connector, it adds a
   - `coding-app`: build a command-line expense tracker; graded by 15 hidden acceptance tests.
   - `research-local`: brief a COO from six bundled sources that contain traps; graded by a 17-point checklist.
   - `research-web`: research MCP transports and authorization on the web; graded by a 15-point checklist.
+  - `spreadsheet`: build `comparison.xlsx` with live formulas; graded by 14 checks. The formulas must be computed and saved, and the totals and payback correct. The router hints the xlsx skill (0.80). This machine has no openpyxl, so agents have to go through LibreOffice.
+  - `landing-page`: a distinctive single-file page; graded by 14 structure and accessibility checks. The router hints the frontend-design skill (0.67).
   - Every task is also scored 1–10 by a separate Sonnet judge that runs without your hooks or plugins.
 - **Measured per run:** the score, hints shown, skills and tools used (subagents included), permission denials, tokens (input, output, cache), cost, turns and time.
 - **Run it:**
   - From Claude Code: `/bench` (add `--dry-run` to see the plan first).
   - From a terminal: `uv run python -m toolhint.bench`, with options `--tasks`, `--reps` (default 3), `--model` (default sonnet), `--judge-model`, `--warmup` (default 45 s).
   - To rebuild a report: `uv run python -m toolhint.bench --report bench/runs/<stamp>`.
-- **Cost and time:** the default 18 runs take a few hours and roughly $15–40 on Sonnet. Each run has a budget cap; the caps add up to $78.
+  - To rescore saved runs after a grader fix, at no model cost (judge scores are kept): `--regrade bench/runs/<stamp>`.
+- **Cost and time:** the default 30 runs (5 tasks × 3 reps × 2 arms) take a few hours. The first full run averaged about $0.60 a run on Sonnet, so expect roughly $20. Each run has a budget cap; the caps add up to $126. Sessions cannot install packages.
 - **Before running:** close other toolhint sessions (VS Code panels, the desktop app). Each one holds about 2.7 GB of GPU memory, and the on-arm router falls back to CPU when the GPU is full.
 - **Output:** `bench/runs/<stamp>/` holds `report.md`, `results.jsonl`, and each run's workspace, stream events and router decisions. The folder is gitignored.
 

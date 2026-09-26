@@ -182,3 +182,9 @@ def test_regrade_rescores_saved_workspaces_and_keeps_the_judge(tmp_path):
     main(["--regrade", str(tmp_path)])
     [kept] = [json.loads(line) for line in (tmp_path / "results.jsonl.bak").read_text().splitlines()]
     assert kept["grade"]["score"] == 0.0  # the first backup holds the original grades
+
+
+def test_sessions_cannot_install_packages():
+    cmd = command(TASK, "on", "sonnet")
+    denied = cmd[cmd.index("--disallowedTools") + 1:cmd.index("--allowedTools")]
+    assert {"Bash(pip:*)", "Bash(python3 -m pip:*)", "Bash(uv pip:*)", "Bash(npm install:*)"} <= set(denied)

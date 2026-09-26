@@ -1,0 +1,16 @@
+[
+  {"id": "at_least_6_formulas", "min_formulas": 6},
+  {"id": "formulas_have_computed_values", "cached_ratio": 0.95},
+  {"id": "no_formula_errors", "no_errors": true},
+  {"id": "routeloom_subscription_214000", "number": [[213999.5, 214000.5]]},
+  {"id": "pathwise_subscription_176000", "number": [[175999.5, 176000.5]]},
+  {"id": "one_time_38000", "number": [[37999.5, 38000.5]]},
+  {"id": "one_time_95000", "number": [[94999.5, 95000.5]]},
+  {"id": "benefit_312000", "number": [[311999.5, 312000.5]]},
+  {"id": "routeloom_3yr_680000_by_formula", "number": [[679999.5, 680000.5]], "formula": true},
+  {"id": "pathwise_3yr_623000_by_formula", "number": [[622999.5, 623000.5]], "formula": true},
+  {"id": "difference_57000_by_formula", "number": [[56999.5, 57000.5], [-57000.5, -56999.5]], "formula": true},
+  {"id": "routeloom_payback_by_formula", "number": [[4.5, 4.8], [0.37, 0.40], [140, 145]], "formula": true},
+  {"id": "pathwise_payback_by_formula", "number": [[8.2, 8.6], [0.68, 0.72], [250, 258]], "formula": true},
+  {"id": "vendor_labels", "text": ["RouteLoom", "Pathwise"]}
+]

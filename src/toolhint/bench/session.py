@@ -14,6 +14,9 @@ from . import Task
 COMMON_TOOLS = ("Read", "Write", "Edit", "MultiEdit", "Glob", "Grep", "LS", "TodoWrite", "Skill", "Task", "Agent",
                 "ToolSearch", "mcp__plugin_toolhint_router__route", "Bash(ls:*)", "Bash(cat:*)", "Bash(mkdir:*)",
                 "Bash(wc:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(find:*)", "Bash(grep:*)", "Bash(git:*)")
+# An install in one run would change the environment for every later run, in both arms
+NO_INSTALLS = ("Bash(pip:*)", "Bash(pip3:*)", "Bash(python3 -m pip:*)", "Bash(python -m pip:*)", "Bash(uv pip:*)",
+               "Bash(uv add:*)", "Bash(uv tool:*)", "Bash(npm install:*)", "Bash(npm i:*)", "Bash(npx:*)")
 # Turning off only the local copy lets the synced Cowork upload load in its place
 OFF_SETTINGS = {"enabledPlugins": {"toolhint@toolhint": False, "toolhint@synced": False}}
 # A nested run must not inherit the launching session's identity, IDE link or effort level
@@ -27,7 +30,7 @@ def command(task: Task, arm: str, model: str, claude_bin: str = "claude") -> lis
            "--max-budget-usd", f"{task.budget_usd:g}"]
     if arm == "off":
         cmd += ["--settings", json.dumps(OFF_SETTINGS)]
-    return cmd + ["--allowedTools", *COMMON_TOOLS, *task.allowed_tools]
+    return cmd + ["--disallowedTools", *NO_INSTALLS, "--allowedTools", *COMMON_TOOLS, *task.allowed_tools]
 
 
 def clean_env(base: Mapping[str, str], decisions: Path) -> dict[str, str]:

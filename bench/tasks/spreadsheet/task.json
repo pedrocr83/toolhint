@@ -1,0 +1,13 @@
+{
+  "prompt": "prompt.md",
+  "budget_usd": 4,
+  "timeout_s": 1200,
+  "allowed_tools": ["Bash(python3:*)", "Bash(python:*)", "Bash(soffice:*)", "Bash(libreoffice:*)", "Bash(unzip:*)",
+                    "Bash(zip:*)", "Bash(cp:*)", "Bash(mv:*)"],
+  "grading": {
+    "kind": "xlsx",
+    "output": "comparison.xlsx",
+    "checklist": "checklist.json",
+    "judge_reference": "reference.md"
+  }
+}

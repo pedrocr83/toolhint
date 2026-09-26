@@ -1,0 +1,1 @@
+Build a polished, distinctive web page for RouteLoom: a single index.html with inline CSS, with a hero, features, pricing and an FAQ. Avoid the generic template look; it must be responsive and accessible.
