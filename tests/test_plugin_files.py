@@ -28,3 +28,10 @@ def test_plugin_has_no_top_level_bin():
 def test_marketplace_points_at_plugin():
     [entry] = load(".claude-plugin/marketplace.json")["plugins"]
     assert (entry["name"], entry["source"]) == ("toolhint", "./plugin")
+
+
+def test_compaction_hook_resets_the_session_memory():
+    entry = load("plugin/hooks/hooks.json")["hooks"]["SessionStart"][0]
+    hook = entry["hooks"][0]
+    assert entry["matcher"] == "compact" and hook["type"] == "mcp_tool" and hook["tool"] == "route"
+    assert hook["input"] == {"prompt": "", "session_id": "${session_id}", "event": "compact"}

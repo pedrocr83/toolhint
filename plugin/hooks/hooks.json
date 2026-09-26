@@ -1,4 +1,6 @@
 {"hooks": {"UserPromptSubmit": [{"hooks": [{"type": "mcp_tool", "server": "plugin:toolhint:router", "tool": "route",
   "input": {"prompt": "${prompt}", "cwd": "${cwd}", "transcript_path": "${transcript_path}", "session_id": "${session_id}",
             "format": "hook"},
-  "timeout": 5}]}]}}
+  "timeout": 5}]}],
+           "SessionStart": [{"matcher": "compact", "hooks": [{"type": "mcp_tool", "server": "plugin:toolhint:router",
+  "tool": "route", "input": {"prompt": "", "session_id": "${session_id}", "event": "compact"}, "timeout": 5}]}]}}

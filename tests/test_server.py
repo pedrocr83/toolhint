@@ -125,3 +125,32 @@ def test_decision_log_records_the_device(tmp_path):
     svc.load()
     svc.route(RouteContext("please debug the failing test"))
     assert json.loads((tmp_path / "d.jsonl").read_text().splitlines()[0])["device"] == "cpu"
+
+
+def test_a_session_is_not_hinted_the_same_item_twice():
+    svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
+    svc.load()
+    assert svc.route(RouteContext("please debug the failing test", session_id="s1")) == HINT
+    assert svc.route(RouteContext("debug the other failing test too", session_id="s1")) == ""
+    assert svc.route(RouteContext("please debug the failing test", session_id="s2")) == HINT
+
+
+@pytest.mark.anyio
+async def test_compaction_event_lets_the_session_see_its_hints_again():
+    svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
+    svc.load()
+    async with Client(build_server(svc)) as client:
+        assert text_of(await client.call_tool("route", PROMPT)) == HINT
+        assert text_of(await client.call_tool("route", {**PROMPT, "prompt": "debug the other failing test"})) == ""
+        assert text_of(await client.call_tool("route", {"prompt": "", "session_id": "s1", "event": "compact"})) == ""
+        assert text_of(await client.call_tool("route", {**PROMPT, "prompt": "and debug the flaky one as well"})) == HINT
+
+
+def test_hint_memory_keeps_at_most_64_sessions():
+    svc = service(lambda: Engine(FakeScorer({"skill": {"debugging": 0.9}})))
+    svc.load()
+    svc.route(RouteContext("please debug the failing test", session_id="s0"))
+    for i in range(1, 65):
+        svc.route(RouteContext(f"please debug failing test number {i}", session_id=f"s{i}"))
+    assert svc.route(RouteContext("debug the other failing test", session_id="s0")) == HINT
+    assert svc.route(RouteContext("debug the other failing test again", session_id="s64")) == ""

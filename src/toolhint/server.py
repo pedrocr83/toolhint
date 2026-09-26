@@ -5,8 +5,10 @@ import json
 import logging
 import os
 import threading
+from collections import OrderedDict
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from pathlib import Path
 
 from mcp.server.mcpserver import MCPServer
@@ -14,8 +16,8 @@ from mcp.server.mcpserver import MCPServer
 from . import __version__, catalog
 from .dataset import previous_prompt
 from .decisions import DEFAULT_LOG, DecisionLog
-from .engine import SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint
-from .items import Item, RouteContext
+from .engine import PLURAL, SHORT_PROMPT_CHARS, Engine, EngineConfig, format_hint
+from .items import Item, Ranking, RouteContext
 
 log = logging.getLogger("toolhint.server")
 INSTRUCTIONS = ("If a user request arrives without a [toolhint] line in context, you may call `route` "
@@ -23,6 +25,7 @@ INSTRUCTIONS = ("If a user request arrives without a [toolhint] line in context,
 ROUTE_DESCRIPTION = ("Rank the skills, connectors and tools most relevant to a user request. "
                      "Returns one advisory line, or an empty string when nothing stands out.")
 WARMUP_PROMPT = "warm up the router model"
+MAX_SESSIONS = 64
 
 
 class RouterService:
@@ -35,6 +38,7 @@ class RouterService:
         self._discover = discover
         self._decisions = decisions or DecisionLog(None)
         self._engine: Engine | None = None
+        self._hinted: OrderedDict[str, set[str]] = OrderedDict()
         self._started = False
         self.ready = threading.Event()
 
@@ -62,7 +66,7 @@ class RouterService:
             items = self._discover(ctx)
             short = len(ctx.prompt.strip()) < SHORT_PROMPT_CHARS
             ranking = engine.rank(ctx.prompt, items, previous_prompt(ctx.transcript_path, ctx.prompt) if short else "")
-            hint = format_hint(ranking)
+            hint = format_hint(self._unseen(ctx.session_id, ranking))
         except Exception:
             log.exception("route failed")
             return ""
@@ -71,6 +75,23 @@ class RouterService:
         except Exception:
             log.exception("decision log write failed; the hint still goes out")
         return hint
+
+    def forget(self, session_id: str) -> None:
+        """Compaction dropped the earlier hints from context, so let them show again."""
+        self._hinted.pop(session_id, None)
+
+    def _unseen(self, session_id: str, ranking: Ranking) -> Ranking:
+        """The ranking minus items this session was already hinted; remembers the rest."""
+        if not session_id:
+            return ranking
+        seen = self._hinted.setdefault(session_id, set())
+        self._hinted.move_to_end(session_id)
+        if len(self._hinted) > MAX_SESSIONS:
+            self._hinted.popitem(last=False)
+        fresh = replace(ranking, **{field: [c for c in getattr(ranking, field) if c.id not in seen]
+                                    for field in PLURAL.values()})
+        seen.update(c.id for c in fresh.skills + fresh.connectors + fresh.tools)
+        return fresh
 
 
 def hook_output(hint: str) -> str:
@@ -91,7 +112,10 @@ def build_server(service: RouterService) -> MCPServer:
 
     @server.tool(name="route", description=ROUTE_DESCRIPTION)
     def route(prompt: str, cwd: str = "", transcript_path: str = "", session_id: str = "",
-              format: str = "text") -> str:  # the plugin hook passes a literal "format": "hook"
+              format: str = "text", event: str = "") -> str:  # the plugin hook passes a literal "format": "hook"
+        if event == "compact":  # SessionStart(compact): earlier hints are gone from the context
+            service.forget(session_id)
+            return ""
         hint = service.route(RouteContext(prompt, cwd, transcript_path, session_id))
         return hook_output(hint) if format == "hook" else hint
 
