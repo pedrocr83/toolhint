@@ -89,6 +89,12 @@ def test_clean_env_drops_the_launching_sessions_identity(tmp_path):
     assert clean_env(base, tmp_path / "d.jsonl") == {"PATH": "/bin", "HOME": "/h", "TOOLHINT_LOG": str(tmp_path / "d.jsonl")}
 
 
+def test_clean_env_leaves_the_harness_virtualenv_so_sessions_get_the_system_python(tmp_path):
+    base = {"PATH": "/repo/.venv/bin:/usr/bin:/bin", "VIRTUAL_ENV": "/repo/.venv"}
+    env = clean_env(base, tmp_path / "d.jsonl")
+    assert env["PATH"] == "/usr/bin:/bin" and "VIRTUAL_ENV" not in env
+
+
 def test_workspace_gets_the_starting_files_but_not_the_graders(tmp_path):
     root = tmp_path / "task"
     (root / "workspace" / "sources").mkdir(parents=True)
